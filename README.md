@@ -103,12 +103,12 @@ with purpose, inputs/outputs, and how to run it.
 
 ## Contributors
 
-| Name | Role | Primary Agent | Security Specialization (individual assignment) |
+| Name | Role | Primary Agent |
 |---|---|---|---|
-| _Member 1_ | | Agent 1 — Wardrobe | Prompt Injection / Jailbreak |
-| _Member 2_ | | Agent 2 — Retrieval | Information Retrieval & Security |
-| _Member 2_ | | Agent 3 — Budget + Auth | Privacy & Data Leakage |
-| _Member 3_ | | Agent 4 — Decision | Responsible AI & Bias |
+| _Member 1_ | | Agent 1 — Wardrobe |
+| _Member 2_ | | Agent 2 — Retrieval | 
+| _Member 2_ | | Agent 3 — Budget + Auth | 
+| _Member 3_ | | Agent 4 — Decision |
 
 ## Contributing
 See [`CONTRIBUTING.md`](CONTRIBUTING.md) for branching strategy, PR process, and
