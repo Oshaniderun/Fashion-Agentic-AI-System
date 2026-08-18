@@ -104,11 +104,10 @@ with purpose, inputs/outputs, and how to run it.
 ## Contributors
 
 | Name | Role | Primary Agent |
-|---|---|---|---|
 | _Member 1_ | | Agent 1 — Wardrobe |
 | _Member 2_ | | Agent 2 — Retrieval | 
-| _Member 2_ | | Agent 3 — Budget + Auth | 
-| _Member 3_ | | Agent 4 — Decision |
+| _Member 3_ | | Agent 3 — Budget + Auth | 
+| _Member 4_ | | Agent 4 — Decision |
 
 ## Contributing
 See [`CONTRIBUTING.md`](CONTRIBUTING.md) for branching strategy, PR process, and
