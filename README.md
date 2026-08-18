@@ -1,5 +1,4 @@
-# Fashion-Agentic-AI-System (FASHORA)
-
+# Fashion-Agentic-AI-System 
 IT3041 (Information Retrieval and Web Analytics) group project.
 
 FASHORA analyses a user's existing wardrobe, occasion, style and budget, retrieves
@@ -107,7 +106,7 @@ with purpose, inputs/outputs, and how to run it.
 | Name | Role | Primary Agent | Security Specialization (individual assignment) |
 |---|---|---|---|
 | _Member 1_ | | Agent 1 — Wardrobe | Prompt Injection / Jailbreak |
-| _You_ | Group Lead | Agent 2 — Retrieval | Information Retrieval & Security |
+| _Member 2_ | | Agent 2 — Retrieval | Information Retrieval & Security |
 | _Member 2_ | | Agent 3 — Budget + Auth | Privacy & Data Leakage |
 | _Member 3_ | | Agent 4 — Decision | Responsible AI & Bias |
 
