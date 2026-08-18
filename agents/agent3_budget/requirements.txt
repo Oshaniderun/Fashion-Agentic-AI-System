@@ -1,0 +1,5 @@
+fastapi
+uvicorn
+pydantic
+python-dotenv
+# optimization libs added during Stage 1 (e.g. pulp, scipy)

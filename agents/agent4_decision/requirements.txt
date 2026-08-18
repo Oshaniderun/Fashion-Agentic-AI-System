@@ -1,0 +1,5 @@
+fastapi
+uvicorn
+pydantic
+python-dotenv
+# LLM SDK added during Stage 1

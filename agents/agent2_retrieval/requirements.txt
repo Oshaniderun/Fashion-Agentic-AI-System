@@ -1,0 +1,5 @@
+fastapi
+uvicorn
+pydantic
+python-dotenv
+# IR libs added during Stage 1 (e.g. rank-bm25, sentence-transformers, chromadb)

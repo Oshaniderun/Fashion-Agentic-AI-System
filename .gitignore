@@ -1,0 +1,41 @@
+# Environment / secrets
+.env
+*.env.local
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+venv/
+.venv/
+*.sqlite3
+
+# Vector DB / embeddings cache
+chroma_db/
+*.index
+
+# Node / frontend
+node_modules/
+dist/
+build/
+.next/
+
+# Docker
+*.pid
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Data (keep small sample data tracked; ignore large/generated exports)
+agents/agent2_retrieval/data/*.large.csv
+agents/agent2_retrieval/data/exports/

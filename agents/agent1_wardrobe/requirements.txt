@@ -1,0 +1,5 @@
+fastapi
+uvicorn
+pydantic
+python-dotenv
+# CV/NLP libs added during Stage 1 (e.g. transformers, pillow)
