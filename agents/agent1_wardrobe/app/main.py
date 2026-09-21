@@ -20,6 +20,7 @@ from fastapi.staticfiles import StaticFiles
 from app.core.config import settings
 from app.core.logging import logger
 from app.models.database import init_db, SessionLocal
+from app.models import User, WardrobeItem, AnalysisRecord  # noqa: F401 — register ORM tables
 from app.utils.seed_data import seed_database_if_empty
 from app.api import auth, wardrobe, analysis, agent, security
 

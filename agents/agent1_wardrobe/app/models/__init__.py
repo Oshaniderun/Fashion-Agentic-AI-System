@@ -5,5 +5,15 @@ Models package initialization.
 from app.models.database import Base, engine, SessionLocal, get_db, init_db
 from app.models.user import User
 from app.models.wardrobe import WardrobeItem
+from app.models.analysis import AnalysisRecord
 
-__all__ = ["Base", "engine", "SessionLocal", "get_db", "init_db", "User", "WardrobeItem"]
+__all__ = [
+    "Base",
+    "engine",
+    "SessionLocal",
+    "get_db",
+    "init_db",
+    "User",
+    "WardrobeItem",
+    "AnalysisRecord",
+]

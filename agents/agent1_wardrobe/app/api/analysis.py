@@ -3,7 +3,7 @@ Fashion Request Processing and Outfit Analysis Endpoints.
 """
 
 from datetime import datetime, timezone
-from typing import Dict, Any, Optional, List
+from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -17,18 +17,19 @@ from app.services.wardrobe.matching import wardrobe_matcher
 from app.services.outfit_requirements import outfit_requirement_engine
 from app.services.missing_items import missing_item_detector
 from app.services.compatibility import compatibility_engine
+from app.services.analysis_store import (
+    save_analysis,
+    get_analysis_for_user,
+    get_latest_analysis_for_user,
+)
 from app.utils.request_id import generate_request_id
 from shared.schemas.agent1_schemas import (
     Agent1OutputContract,
     ConfidenceMetrics,
-    WardrobeSummaryItem
 )
 from app.core.logging import logger
 
 router = APIRouter(prefix="/api/analyze", tags=["Fashion Analysis"])
-
-# In-memory session store for recent analysis requests (correlation by request_id)
-ANALYSIS_HISTORY_CACHE: Dict[str, FashionAnalysisResponse] = {}
 
 
 @router.post("/request", response_model=FashionAnalysisResponse)
@@ -41,6 +42,7 @@ def analyze_fashion_request(
     Primary User Flow:
     Analyzes natural-language request, extracts requirements, checks owned wardrobe,
     determines missing categories, evaluates compatibility, and builds Agent 1 Output Contract.
+    Results are persisted per-user so they survive server restarts.
     """
     request_id = generate_request_id()
     start_time = datetime.now(timezone.utc)
@@ -127,9 +129,9 @@ def analyze_fashion_request(
         raw_agent1_contract=contract
     )
 
-    ANALYSIS_HISTORY_CACHE[request_id] = response
+    save_analysis(db=db, user_id=user.id, response=response)
     logger.info(
-        f"Processed analysis {request_id} for user {user.id}",
+        f"Processed and persisted analysis {request_id} for user {user.id}",
         extra={"request_id": request_id, "endpoint": "/api/analyze/request", "user_id": user.id}
     )
 
@@ -137,20 +139,25 @@ def analyze_fashion_request(
 
 
 @router.get("/recent/latest", response_model=Optional[FashionAnalysisResponse])
-def get_latest_analysis():
-    """Retrieves the most recent analysis result for dashboard overview."""
-    if not ANALYSIS_HISTORY_CACHE:
-        return None
-    latest_id = list(ANALYSIS_HISTORY_CACHE.keys())[-1]
-    return ANALYSIS_HISTORY_CACHE[latest_id]
+def get_latest_analysis(
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Retrieves the most recent analysis for the authenticated user (dashboard)."""
+    return get_latest_analysis_for_user(db=db, user_id=user.id)
 
 
 @router.get("/{request_id}", response_model=FashionAnalysisResponse)
-def get_analysis_by_id(request_id: str):
-    """Retrieves a previously computed analysis by its unique request ID."""
-    if request_id not in ANALYSIS_HISTORY_CACHE:
+def get_analysis_by_id(
+    request_id: str,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Retrieves a previously persisted analysis by request ID (owner only)."""
+    result = get_analysis_for_user(db=db, request_id=request_id, user_id=user.id)
+    if not result:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Analysis with request ID '{request_id}' was not found in active session cache."
+            detail=f"Analysis with request ID '{request_id}' was not found for this user.",
         )
-    return ANALYSIS_HISTORY_CACHE[request_id]
+    return result

@@ -19,6 +19,7 @@ from app.main import app
 from app.models.database import Base, get_db
 from app.models.user import User
 from app.models.wardrobe import WardrobeItem
+from app.models.analysis import AnalysisRecord  # noqa: F401 — register table for create_all
 from app.core.security import hash_password
 
 # Use a shared in-memory SQLite database across all test modules

@@ -128,6 +128,8 @@ pytest -v
 python evaluation/run_evaluation.py
 ```
 
+Analysis results are stored in the `analysis_records` table (per user) so dashboard “last analysis” and `/api/analyze/{request_id}` survive restarts.
+
 ---
 
 ## Responsible AI

@@ -19,3 +19,4 @@ class User(Base):
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
     wardrobe_items = relationship("WardrobeItem", back_populates="user", cascade="all, delete-orphan")
+    analysis_records = relationship("AnalysisRecord", back_populates="user", cascade="all, delete-orphan")
