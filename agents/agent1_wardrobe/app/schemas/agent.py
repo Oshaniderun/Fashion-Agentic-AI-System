@@ -1,6 +1,6 @@
 """
-Shared Pydantic models across FASHORA agents.
-Source of truth for request/response shapes.
+Agent inter-service communication schemas.
+Re-exports the shared single-source-of-truth contract models.
 """
 
 from shared.schemas.agent1_schemas import (

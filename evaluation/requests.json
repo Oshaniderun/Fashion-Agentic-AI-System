@@ -1,0 +1,27 @@
+[
+  {
+    "id": "eval_01",
+    "prompt": "I need something elegant but not too formal for my cousin's engagement. I don't want bright colours.",
+    "context": "Primary benchmark from Section 50 of specification"
+  },
+  {
+    "id": "eval_02",
+    "prompt": "I need a smart casual outfit for university. Budget is around 5000.",
+    "context": "University student scenario"
+  },
+  {
+    "id": "eval_03",
+    "prompt": "Looking for a strictly formal suit or blazer outfit for a corporate job interview. No jeans.",
+    "context": "Professional interview scenario"
+  },
+  {
+    "id": "eval_04",
+    "prompt": "I want something casual for a weekend outing with friends in neutral colours.",
+    "context": "Casual weekend hangout"
+  },
+  {
+    "id": "eval_05",
+    "prompt": "Need an outfit for an evening wedding ceremony. Elegant and classy with dark colours, can spend up to LKR 15,000.",
+    "context": "High-budget wedding evening"
+  }
+]
