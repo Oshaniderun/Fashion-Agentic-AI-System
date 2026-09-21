@@ -51,7 +51,7 @@
     },
     "shoes": {
       "category": "shoes",
-      "synonyms": ["shoes", "footwear", "loafers", "sneakers", "heels", "sandals", "boots", "flats"]
+      "synonyms": ["shoes", "footwear", "loafers", "sneakers", "heels", "sandals", "boots", "flats", "slippers", "slipper"]
     },
     "outerwear": {
       "category": "outerwear",

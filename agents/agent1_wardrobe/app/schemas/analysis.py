@@ -2,8 +2,8 @@
 Fashion request and analysis view schemas.
 """
 
-from typing import Optional, List, Dict, Any
-from pydantic import BaseModel, Field
+from typing import Optional, List
+from pydantic import BaseModel, Field, model_validator
 from datetime import datetime
 
 from shared.schemas.agent1_schemas import (
@@ -13,6 +13,9 @@ from shared.schemas.agent1_schemas import (
     CompatibilityDetails,
     ConfidenceMetrics,
     Agent2SearchRequirement,
+    Agent2HandoffPayload,
+    Agent2WardrobeStatus,
+    Agent2AvailableItem,
     Agent1OutputContract,
 )
 
@@ -36,4 +39,37 @@ class FashionAnalysisResponse(BaseModel):
     compatibility: Optional[CompatibilityDetails]
     confidence: ConfidenceMetrics
     search_requirements: Agent2SearchRequirement
+    agent2_handoff: Optional[Agent2HandoffPayload] = None
     raw_agent1_contract: Agent1OutputContract
+
+    @model_validator(mode="after")
+    def _fill_agent2_handoff(self):
+        if self.agent2_handoff is not None:
+            return self
+        avail_cats = list(self.outfit_requirements.available_categories)
+        missing = list(self.outfit_requirements.missing_categories)
+        items: List[Agent2AvailableItem] = []
+        seen = set()
+        for w in self.available_wardrobe:
+            cat = w.category.lower()
+            if cat in {c.lower() for c in avail_cats} and cat not in seen:
+                seen.add(cat)
+                items.append(
+                    Agent2AvailableItem(
+                        wardrobe_id=w.wardrobe_id,
+                        category=w.category,
+                        type=w.type,
+                        colour=w.colour,
+                    )
+                )
+        self.agent2_handoff = Agent2HandoffPayload(
+            request_id=self.request_id,
+            user_requirements=self.user_requirements,
+            wardrobe_status=Agent2WardrobeStatus(
+                available_categories=avail_cats,
+                missing_categories=missing,
+            ),
+            available_items=items,
+            search_requirements=self.search_requirements,
+        )
+        return self

@@ -58,6 +58,10 @@ def test_agent_analyze_contract_conformance(client):
 
     assert contract.search_requirements.occasion == "engagement"
     assert contract.search_requirements.budget_remaining == 8000.0
+    assert contract.search_requirements.maximum_price == 8000.0
+    assert contract.agent2_handoff is not None
+    assert contract.agent2_handoff.request_id == contract.request_id
+    assert contract.agent2_handoff.search_requirements.occasion == "engagement"
 
 
 def test_agent_analyze_with_service_token(client):

@@ -10,6 +10,7 @@ from shared.schemas.agent1_schemas import (
     CompatibilityDetails,
     ConfidenceMetrics,
     Agent2SearchRequirement,
+    Agent2HandoffPayload,
     Agent1OutputContract,
     Agent1AnalysisRequest,
 )
@@ -21,6 +22,7 @@ __all__ = [
     "CompatibilityDetails",
     "ConfidenceMetrics",
     "Agent2SearchRequirement",
+    "Agent2HandoffPayload",
     "Agent1OutputContract",
     "Agent1AnalysisRequest",
 ]

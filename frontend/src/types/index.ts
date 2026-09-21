@@ -125,13 +125,37 @@ export interface ConfidenceMetrics {
 }
 
 export interface Agent2SearchRequirement {
+  categories?: string[];
   missing_categories: string[];
   style: string[];
+  colour_preferences?: string[];
   colour: string[];
+  pattern_preferences?: string[];
   pattern?: string[];
   occasion?: string | null;
+  maximum_price?: number | null;
   budget_remaining?: number | null;
   query_text?: string | null;
+}
+
+export interface Agent2AvailableItem {
+  wardrobe_id: string;
+  category: string;
+  type: string;
+  colour: string;
+}
+
+export interface Agent2WardrobeStatus {
+  available_categories: string[];
+  missing_categories: string[];
+}
+
+export interface Agent2HandoffPayload {
+  request_id: string;
+  user_requirements: UserRequirements;
+  wardrobe_status: Agent2WardrobeStatus;
+  available_items: Agent2AvailableItem[];
+  search_requirements: Agent2SearchRequirement;
 }
 
 export interface Agent1OutputContract {
@@ -143,6 +167,7 @@ export interface Agent1OutputContract {
   compatibility?: CompatibilityDetails | null;
   confidence: ConfidenceMetrics;
   search_requirements: Agent2SearchRequirement;
+  agent2_handoff?: Agent2HandoffPayload | null;
 }
 
 export interface FashionRequestInput {
@@ -164,6 +189,7 @@ export interface FashionAnalysisResponse {
   compatibility?: CompatibilityDetails | null;
   confidence: ConfidenceMetrics;
   search_requirements: Agent2SearchRequirement;
+  agent2_handoff?: Agent2HandoffPayload | null;
   raw_agent1_contract: Agent1OutputContract;
 }
 

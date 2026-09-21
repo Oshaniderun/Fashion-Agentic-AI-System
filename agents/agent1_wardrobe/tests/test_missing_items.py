@@ -41,19 +41,61 @@ def test_missing_shoes_detection_scenario():
     assert "bottom" in required_cats
     assert "shoes" in required_cats
 
-    outfit_reqs, search_handoff = missing_item_detector.analyze_missing(
+    outfit_reqs, search_handoff, agent2_handoff = missing_item_detector.analyze_missing(
         required_categories=required_cats,
         optional_categories=optional_cats,
         owned_items=wardrobe,
-        user_requirements=reqs
+        user_requirements=reqs,
+        request_id="REQ-TEST-001",
     )
 
     assert "top" in outfit_reqs.available_categories
     assert "bottom" in outfit_reqs.available_categories
     assert "shoes" in outfit_reqs.missing_categories
 
-    # Verify handoff payload for Agent 2
     assert "shoes" in search_handoff.missing_categories
+    assert "shoes" in search_handoff.categories
     assert search_handoff.occasion == "engagement"
     assert search_handoff.budget_remaining == 8000.0
+    assert search_handoff.maximum_price == 8000.0
     assert "shoes" in search_handoff.query_text.lower()
+
+    assert agent2_handoff.request_id == "REQ-TEST-001"
+    assert "shoes" in agent2_handoff.wardrobe_status.missing_categories
+    assert any(i.wardrobe_id == "W001" for i in agent2_handoff.available_items)
+
+
+def test_interview_blouse_bottom_handoff_no_duplicate_bottom():
+    wardrobe = [
+        WardrobeSummaryItem(
+            wardrobe_id="W001",
+            category="top",
+            type="blouse",
+            colour="red",
+            formality=0.7,
+            style="formal",
+        )
+    ]
+    reqs = UserRequirements(
+        occasion="interview",
+        style=["formal"],
+        colour_preferences=[],
+        budget=4000.0,
+        requested_categories=["top", "bottom"],
+        requested_types=["blouse", "bottom", "pant"],
+    )
+    required = ["top", "bottom"]
+    outfit_reqs, search_handoff, handoff = missing_item_detector.analyze_missing(
+        required_categories=required,
+        optional_categories=[],
+        owned_items=wardrobe,
+        user_requirements=reqs,
+        request_id="REQ-001",
+    )
+    assert outfit_reqs.missing_categories == ["bottom"]
+    assert search_handoff.categories == ["bottom"]
+    q = (search_handoff.query_text or "").lower()
+    assert q.count("bottom") <= 1
+    assert "blouse" not in q  # already owned — not for Agent 2 search
+    assert handoff.available_items[0].colour == "red"
+    assert handoff.search_requirements.maximum_price == 4000.0

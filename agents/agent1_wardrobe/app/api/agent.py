@@ -133,11 +133,12 @@ def analyze_for_downstream_agents(
     required_cats, optional_cats = outfit_requirement_engine.determine_requirements(extracted_reqs)
 
     # 5. Missing items & Agent 2 search handoff
-    outfit_reqs, search_handoff = missing_item_detector.analyze_missing(
+    outfit_reqs, search_handoff, agent2_handoff = missing_item_detector.analyze_missing(
         required_categories=required_cats,
         optional_categories=optional_cats,
         owned_items=summary_wardrobe,
-        user_requirements=extracted_reqs
+        user_requirements=extracted_reqs,
+        request_id=request_id,
     )
 
     # 6. Compatible items & compatibility reasoning
@@ -172,7 +173,8 @@ def analyze_for_downstream_agents(
         compatible_items=[it.wardrobe_id for it in compatible_items],
         compatibility=compat_details,
         confidence=confidence_metrics,
-        search_requirements=search_handoff
+        search_requirements=search_handoff,
+        agent2_handoff=agent2_handoff,
     )
 
 

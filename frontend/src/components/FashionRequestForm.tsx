@@ -3,6 +3,7 @@ import type { FashionRequestInput } from '../types';
 
 const SAMPLE_PROMPTS = [
   'I need something elegant but not too formal for my cousin\'s engagement. I don\'t want bright colours.',
+  'I need something formal for an interview like a blouse and a bottom pant.',
   'I need a smart casual outfit for university.',
   'I need a formal outfit for an interview.',
   'I want something casual for a weekend outing.',

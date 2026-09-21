@@ -85,12 +85,15 @@ def test_checked_frock_extracts_pattern_in_handoff():
     required, optional = outfit_requirement_engine.determine_requirements(reqs)
     assert required == ["dress"]
 
-    _, handoff = missing_item_detector.analyze_missing(
+    _, handoff, full = missing_item_detector.analyze_missing(
         required_categories=required,
         optional_categories=optional,
         owned_items=[],
         user_requirements=reqs,
+        request_id="REQ-FROCK",
     )
     assert "checked" in handoff.pattern
+    assert "checked" in handoff.pattern_preferences
     assert "checked" in (handoff.query_text or "").lower()
     assert "frock" in (handoff.query_text or "").lower() or "dress" in (handoff.query_text or "").lower()
+    assert full.search_requirements.categories == handoff.categories

@@ -210,7 +210,12 @@ export function AnalysisResult() {
 
           <div className="panel">
             <h2>Agent 2 handoff preview</h2>
-            <pre className="code-block">{JSON.stringify(data.search_requirements, null, 2)}</pre>
+            <p className="meta" style={{ marginBottom: 8 }}>
+              Structured package Agent 2 should consume (requirements + wardrobe gaps + search brief).
+            </p>
+            <pre className="code-block">
+              {JSON.stringify(data.agent2_handoff ?? data.search_requirements, null, 2)}
+            </pre>
           </div>
         </div>
       )}

@@ -97,6 +97,7 @@ class ClothingImageAnalyzer(BaseImageAnalyzer):
             "boots": 0.60,
             "heels": 0.85,
             "sandals": 0.30,
+            "slippers": 0.25,
             # Outerwear
             "blazer": 0.90,
             "jacket": 0.55,
@@ -106,6 +107,15 @@ class ClothingImageAnalyzer(BaseImageAnalyzer):
             "midi_dress": 0.70,
             "maxi_dress": 0.75,
             "frock": 0.55,
+            # Bags / accessories
+            "handbag": 0.55,
+            "tote_bag": 0.45,
+            "clutch": 0.65,
+            "backpack": 0.35,
+            "belt": 0.50,
+            "scarf": 0.45,
+            "jewelry": 0.55,
+            "hat": 0.40,
         }
 
         formality = formality_map.get(garment_type, 0.50)
@@ -148,9 +158,14 @@ class ClothingImageAnalyzer(BaseImageAnalyzer):
             "t-shirt": "cotton",
             "blazer": "tailored_wool",
             "sneakers": "canvas_leather",
+            "slippers": "fabric",
+            "sandals": "leather",
             "frock": "cotton",
             "midi_dress": "fabric",
             "maxi_dress": "fabric",
+            "handbag": "leather",
+            "tote_bag": "fabric",
+            "belt": "leather",
         }
         material = material_map.get(garment_type, "fabric")
         if pattern == "checked" and garment_type in ["frock", "midi_dress", "shirt"]:
