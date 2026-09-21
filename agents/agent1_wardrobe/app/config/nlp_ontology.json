@@ -1,0 +1,78 @@
+{
+  "occasions": {
+    "engagement": ["engagement", "cousin's engagement", "engagement party", "engagement dinner", "ring ceremony"],
+    "wedding": ["wedding", "wedding ceremony", "marriage", "reception", "nuptials", "bridal shower"],
+    "university": ["university", "college", "campus", "lecture", "presentation", "uni event"],
+    "interview": ["interview", "job interview", "hiring interview", "tech interview", "corporate interview", "interview outfit"],
+    "work": ["work", "office", "meeting", "business", "client meeting"],
+    "dinner": ["dinner", "dinner date", "formal dinner", "restaurant", "gala dinner", "evening dinner"],
+    "party": ["party", "birthday party", "celebration", "night out", "clubbing"],
+    "casual": ["casual outing", "weekend outing", "hangout", "coffee", "brunch", "errands"]
+  },
+  "styles": {
+    "semi_formal": ["semi-formal", "semi formal", "not too formal", "dressy casual", "smart evening"],
+    "elegant": ["elegant", "classy", "sophisticated", "chic", "refined", "graceful"],
+    "smart_casual": ["smart casual", "smart-casual", "business casual", "polished casual"],
+    "formal": ["formal", "black tie", "suit and tie", "strictly formal"],
+    "casual": ["casual", "laid back", "relaxed", "everyday", "comfortable"],
+    "streetwear": ["streetwear", "urban", "edgy", "oversized"],
+    "minimalist": ["minimalist", "minimal", "clean", "simple"]
+  },
+  "colours": {
+    "dark": ["dark", "deep", "charcoal", "dark grey", "dark colours", "dark colors"],
+    "neutral": ["neutral", "neutrals", "cream", "tan", "nude", "neutral colours", "neutral colors"],
+    "bright": ["bright", "vibrant", "neon", "flashy", "loud", "bright colours", "bright colors"],
+    "pastel": ["pastel", "soft", "light pink", "baby blue", "lavender", "mint"],
+    "black": ["black"],
+    "white": ["white"],
+    "grey": ["grey", "gray"],
+    "blue": ["blue", "navy blue", "royal blue", "navy"],
+    "red": ["red", "crimson", "maroon", "burgundy"],
+    "green": ["green", "olive", "emerald"],
+    "yellow": ["yellow", "mustard"],
+    "beige": ["beige", "camel", "khaki"],
+    "brown": ["brown", "chocolate", "mocha"],
+    "pink": ["pink", "rose"],
+    "purple": ["purple", "violet"],
+    "orange": ["orange", "coral"]
+  },
+  "garments": {
+    "dress": {
+      "category": "dress",
+      "synonyms": ["dress", "frock", "gown", "maxi dress", "midi dress", "mini dress", "cocktail dress", "sundress"]
+    },
+    "top": {
+      "category": "top",
+      "synonyms": ["top", "blouse", "shirt", "t-shirt", "tshirt", "tee", "sweater", "tank top", "kurta", "crop top"]
+    },
+    "bottom": {
+      "category": "bottom",
+      "synonyms": ["bottom", "jeans", "trousers", "pants", "skirt", "shorts", "leggings", "palazzo"]
+    },
+    "shoes": {
+      "category": "shoes",
+      "synonyms": ["shoes", "footwear", "loafers", "sneakers", "heels", "sandals", "boots", "flats"]
+    },
+    "outerwear": {
+      "category": "outerwear",
+      "synonyms": ["jacket", "blazer", "coat", "cardigan", "hoodie", "outerwear"]
+    },
+    "bag": {
+      "category": "bag",
+      "synonyms": ["bag", "handbag", "tote", "clutch", "backpack", "purse"]
+    },
+    "accessory": {
+      "category": "accessory",
+      "synonyms": ["accessory", "accessories", "scarf", "belt", "hat", "jewellery", "jewelry", "earrings", "necklace"]
+    }
+  },
+  "patterns": {
+    "checked": ["checked", "checkered", "check", "gingham", "plaid", "tartan", "grid"],
+    "striped": ["striped", "stripes", "stripe", "pinstripe"],
+    "floral": ["floral", "flower", "flowers", "botanical"],
+    "polka_dot": ["polka dot", "polka dots", "dotted", "dots"],
+    "printed": ["printed", "print", "graphic print"],
+    "solid": ["solid", "plain", "no pattern"],
+    "textured": ["textured", "knit", "ribbed"]
+  }
+}

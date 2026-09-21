@@ -40,25 +40,30 @@ class ColorAnalyzer:
     def analyze_colors(self, image: Image.Image) -> Dict[str, Any]:
         """
         Extracts dominant primary and secondary colors and tonal group from the clothing image.
+        Uses a center crop and filters likely scenic background pixels (sky/water).
         """
-        # Resize for fast, robust clustering
-        img_small = image.convert("RGB").resize((120, 120))
-        pixels = np.array(img_small).reshape(-1, 3)
+        w, h = image.size
+        # Focus on the garment region; full-frame person photos pull sunset/water into clusters
+        cropped = image.convert("RGB").crop((int(w * 0.28), int(h * 0.22), int(w * 0.72), int(h * 0.88)))
+        img_small = cropped.resize((120, 120))
+        pixels = np.array(img_small).reshape(-1, 3).astype(np.float32)
 
-        # 1. Background filtering: remove near-white / near-light-gray borders
-        # Typical fashion catalog images have white/light-gray background (> 240 in all RGB channels)
-        mask = ~((pixels[:, 0] > 240) & (pixels[:, 1] > 240) & (pixels[:, 2] > 240))
+        # Drop near-white + strong blue water + strong orange sunset + near-black UI/shadows
+        r, g, b = pixels[:, 0], pixels[:, 1], pixels[:, 2]
+        near_white = (r > 235) & (g > 235) & (b > 235)
+        near_black = (r < 35) & (g < 35) & (b < 35)
+        water_blue = (b > r + 25) & (b > g + 15) & (b > 120)
+        sunset_orange = (r > 180) & (g > 90) & (g < 180) & (b < 90) & (r > b + 60)
+        mask = ~(near_white | near_black | water_blue | sunset_orange)
         filtered_pixels = pixels[mask]
 
         if len(filtered_pixels) < 50:
-            filtered_pixels = pixels  # Fallback to all pixels if image is mostly white
+            filtered_pixels = pixels
 
-        # 2. K-Means clustering for dominant colors
         k = min(self.n_clusters, len(filtered_pixels))
         kmeans = KMeans(n_clusters=k, random_state=42, n_init="auto")
         kmeans.fit(filtered_pixels)
 
-        # Count frequencies of each cluster
         labels, counts = np.unique(kmeans.labels_, return_counts=True)
         sorted_indices = np.argsort(-counts)
 
@@ -81,7 +86,6 @@ class ColorAnalyzer:
         primary_name, primary_tone, primary_conf = cluster_colors[0]
         secondary_name = None
         if len(cluster_colors) > 1 and cluster_weights[1] >= 0.15:
-            # Only consider secondary color if it represents >= 15% of garment
             cand_sec = cluster_colors[1][0]
             if cand_sec != primary_name:
                 secondary_name = cand_sec
@@ -121,6 +125,11 @@ class ColorAnalyzer:
             return "black", "dark", 0.95
         if v_pct > 88 and s_pct < 12:
             return "white", "light", 0.95
+
+        # Beige / tan before generic grey — gingham beige+white averages look desaturated
+        if 20 <= h_deg <= 55 and s_pct <= 45 and v_pct > 55:
+            return "beige", "neutral", 0.86
+
         if s_pct < 15 and 15 <= v_pct <= 85:
             return "grey", "neutral", 0.90
 

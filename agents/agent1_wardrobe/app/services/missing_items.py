@@ -53,20 +53,24 @@ class MissingItemDetector:
         )
 
         # Build clean search handoff for Agent 2
-        # Synthesize expanded query text for Agent 2's BM25 & embedding search
-        style_desc = " ".join(user_requirements.style) if user_requirements.style else "versatile"
-        color_desc = " ".join(user_requirements.colour_preferences) if user_requirements.colour_preferences else "neutral"
-        target_cats = " and ".join(missing) if missing else "accessories"
+        style_desc = " ".join(user_requirements.style) if user_requirements.style else ""
+        color_desc = " ".join(user_requirements.colour_preferences) if user_requirements.colour_preferences else ""
+        pattern_desc = " ".join(user_requirements.pattern_preferences) if user_requirements.pattern_preferences else ""
+        type_desc = " ".join(user_requirements.requested_types) if user_requirements.requested_types else ""
+        target_cats = " and ".join(missing) if missing else " ".join(user_requirements.requested_categories)
         occasion_desc = f"for {user_requirements.occasion}" if user_requirements.occasion else ""
         budget_desc = f"under LKR {int(user_requirements.budget)}" if user_requirements.budget else ""
 
-        query_parts = [style_desc, color_desc, target_cats, occasion_desc, budget_desc]
+        query_parts = [style_desc, color_desc, pattern_desc, type_desc, target_cats, occasion_desc, budget_desc]
         synthetic_query = " ".join([p for p in query_parts if p]).strip()
+        if not synthetic_query:
+            synthetic_query = "fashion item"
 
         search_handoff = Agent2SearchRequirement(
             missing_categories=missing,
             style=user_requirements.style,
             colour=user_requirements.colour_preferences,
+            pattern=user_requirements.pattern_preferences,
             occasion=user_requirements.occasion,
             budget_remaining=user_requirements.budget,
             query_text=synthetic_query

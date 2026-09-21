@@ -5,6 +5,7 @@ import { ErrorAlert } from '../components/ErrorAlert';
 import { LoadingSkeleton } from '../components/LoadingSkeleton';
 import { deleteWardrobeItem, listWardrobe } from '../services/wardrobeService';
 import { extractErrorMessage } from '../services/api';
+import { CLOTHING_CATEGORIES, CLOTHING_PATTERNS, CLOTHING_STYLES } from '../constants/clothing';
 import type { WardrobeItem } from '../types';
 
 export function Wardrobe() {
@@ -23,7 +24,7 @@ export function Wardrobe() {
     try {
       const data = await listWardrobe({
         category: category || undefined,
-        colour: colour || undefined,
+        colour: colour.trim() || undefined,
         style: style || undefined,
         pattern: pattern || undefined,
       });
@@ -44,7 +45,9 @@ export function Wardrobe() {
     const q = search.trim().toLowerCase();
     if (!q) return items;
     return items.filter((i) =>
-      `${i.type} ${i.colour} ${i.category} ${i.style} ${i.wardrobe_code}`.toLowerCase().includes(q)
+      `${i.type} ${i.colour} ${i.category} ${i.style} ${i.pattern} ${i.material || ''} ${i.wardrobe_code}`
+        .toLowerCase()
+        .includes(q)
     );
   }, [items, search]);
 
@@ -76,17 +79,21 @@ export function Wardrobe() {
         <div className="row">
           <div className="field">
             <label>Search</label>
-            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="blouse, black…" />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="blouse, checked, beige…"
+            />
           </div>
           <div className="field">
             <label>Category</label>
             <select value={category} onChange={(e) => setCategory(e.target.value)}>
               <option value="">All</option>
-              <option value="top">Top</option>
-              <option value="bottom">Bottom</option>
-              <option value="shoes">Footwear</option>
-              <option value="bag">Bag</option>
-              <option value="accessory">Accessory</option>
+              {CLOTHING_CATEGORIES.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
             </select>
           </div>
           <div className="field">
@@ -95,11 +102,25 @@ export function Wardrobe() {
           </div>
           <div className="field">
             <label>Style</label>
-            <input value={style} onChange={(e) => setStyle(e.target.value)} placeholder="smart_casual" />
+            <select value={style} onChange={(e) => setStyle(e.target.value)}>
+              <option value="">All</option>
+              {CLOTHING_STYLES.map((s) => (
+                <option key={s} value={s}>
+                  {s.replace(/_/g, ' ')}
+                </option>
+              ))}
+            </select>
           </div>
           <div className="field">
             <label>Pattern</label>
-            <input value={pattern} onChange={(e) => setPattern(e.target.value)} placeholder="solid" />
+            <select value={pattern} onChange={(e) => setPattern(e.target.value)}>
+              <option value="">All</option>
+              {CLOTHING_PATTERNS.map((p) => (
+                <option key={p} value={p}>
+                  {p}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
       </div>

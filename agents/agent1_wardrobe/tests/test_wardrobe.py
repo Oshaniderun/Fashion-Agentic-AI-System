@@ -100,3 +100,47 @@ def test_wardrobe_crud_and_user_isolation(client, db_session):
     # User 1 deletes item
     del_resp = client.delete(f"/api/wardrobe/{item_id}", headers={"Authorization": f"Bearer {t1}"})
     assert del_resp.status_code == 204
+
+
+def test_wardrobe_filters_by_category_and_pattern(client, db_session):
+    _, token = create_user_and_token(db_session, "filter@fashora.ai", "Filter User")
+    headers = {"Authorization": f"Bearer {token}"}
+
+    for payload in [
+        {
+            "image_path": "uploads/a.png",
+            "category": "dress",
+            "type": "frock",
+            "colour": "beige",
+            "pattern": "checked",
+            "style": "casual",
+            "formality": 0.5,
+            "confidence": 0.9,
+        },
+        {
+            "image_path": "uploads/b.png",
+            "category": "top",
+            "type": "blouse",
+            "colour": "red",
+            "pattern": "solid",
+            "style": "casual",
+            "formality": 0.5,
+            "confidence": 0.9,
+        },
+    ]:
+        assert client.post("/api/wardrobe", headers=headers, json=payload).status_code == 201
+
+    by_dress = client.get("/api/wardrobe", headers=headers, params={"category": "dress"})
+    assert by_dress.status_code == 200
+    assert len(by_dress.json()) == 1
+    assert by_dress.json()[0]["type"] == "frock"
+
+    by_solid = client.get("/api/wardrobe", headers=headers, params={"pattern": "solid"})
+    assert by_solid.status_code == 200
+    assert len(by_solid.json()) == 1
+    assert by_solid.json()[0]["pattern"] == "solid"
+
+    by_checked = client.get("/api/wardrobe", headers=headers, params={"pattern": "Checked"})
+    assert by_checked.status_code == 200
+    assert len(by_checked.json()) == 1
+    assert by_checked.json()[0]["pattern"] == "checked"

@@ -82,6 +82,9 @@ export interface UserRequirements {
   colour_preferences: string[];
   excluded_colours: string[];
   budget?: number | null;
+  requested_categories?: string[];
+  requested_types?: string[];
+  pattern_preferences?: string[];
   additional_preferences: string[];
 }
 
@@ -125,6 +128,7 @@ export interface Agent2SearchRequirement {
   missing_categories: string[];
   style: string[];
   colour: string[];
+  pattern?: string[];
   occasion?: string | null;
   budget_remaining?: number | null;
   query_text?: string | null;

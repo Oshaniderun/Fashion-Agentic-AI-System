@@ -71,3 +71,26 @@ def test_synonym_normalization():
     styles = normalize_styles("Keep it smart casual and chic")
     assert "smart_casual" in styles
     assert "elegant" in styles
+
+
+def test_checked_frock_extracts_pattern_in_handoff():
+    from app.services.outfit_requirements import outfit_requirement_engine
+    from app.services.missing_items import missing_item_detector
+
+    prompt = "I need some checked design frock"
+    reqs, _, _ = fashion_requirement_service.process_request(prompt)
+    assert "dress" in reqs.requested_categories
+    assert "checked" in reqs.pattern_preferences
+
+    required, optional = outfit_requirement_engine.determine_requirements(reqs)
+    assert required == ["dress"]
+
+    _, handoff = missing_item_detector.analyze_missing(
+        required_categories=required,
+        optional_categories=optional,
+        owned_items=[],
+        user_requirements=reqs,
+    )
+    assert "checked" in handoff.pattern
+    assert "checked" in (handoff.query_text or "").lower()
+    assert "frock" in (handoff.query_text or "").lower() or "dress" in (handoff.query_text or "").lower()

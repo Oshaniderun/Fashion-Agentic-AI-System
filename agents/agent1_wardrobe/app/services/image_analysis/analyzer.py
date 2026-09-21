@@ -104,6 +104,8 @@ class ClothingImageAnalyzer(BaseImageAnalyzer):
             # Dresses
             "cocktail_dress": 0.90,
             "midi_dress": 0.70,
+            "maxi_dress": 0.75,
+            "frock": 0.55,
         }
 
         formality = formality_map.get(garment_type, 0.50)
@@ -128,8 +130,8 @@ class ClothingImageAnalyzer(BaseImageAnalyzer):
 
         # Sleeve type where applicable
         sleeve_type = None
-        if category in ["top", "outerwear"]:
-            if garment_type in ["blouse", "shirt", "blazer", "sweater", "coat"]:
+        if category in ["top", "outerwear", "dress"]:
+            if garment_type in ["blouse", "shirt", "blazer", "sweater", "coat", "midi_dress", "frock"]:
                 sleeve_type = "long_sleeve"
             elif garment_type == "t-shirt":
                 sleeve_type = "short_sleeve"
@@ -146,8 +148,13 @@ class ClothingImageAnalyzer(BaseImageAnalyzer):
             "t-shirt": "cotton",
             "blazer": "tailored_wool",
             "sneakers": "canvas_leather",
+            "frock": "cotton",
+            "midi_dress": "fabric",
+            "maxi_dress": "fabric",
         }
         material = material_map.get(garment_type, "fabric")
+        if pattern == "checked" and garment_type in ["frock", "midi_dress", "shirt"]:
+            material = "cotton"
 
         return round(formality, 2), style, sleeve_type, material
 

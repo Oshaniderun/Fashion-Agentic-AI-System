@@ -1,55 +1,26 @@
 """
 Outfit Requirement Rules Engine.
-Determines required and optional clothing categories based on occasion and style parameters.
+Loads editable rules from app/config/outfit_rules.json.
+Respects explicitly requested garments (e. nights frock/dress) over default full outfits.
 """
 
-from typing import List, Dict, Tuple, Optional
-from shared.schemas.agent1_schemas import UserRequirements, OutfitRequirements
+from __future__ import annotations
 
-# Configurable requirement templates by occasion
-OCCASION_REQUIREMENT_RULES: Dict[str, Dict[str, List[str]]] = {
-    "engagement": {
-        "required": ["top", "bottom", "shoes"],
-        "optional": ["bag", "accessory"]
-    },
-    "wedding": {
-        "required": ["top", "bottom", "shoes"],
-        "optional": ["bag", "accessory", "jewelry"]
-    },
-    "formal_event": {
-        "required": ["top", "bottom", "shoes"],
-        "optional": ["outerwear", "bag", "accessory"]
-    },
-    "work": {
-        "required": ["top", "bottom", "shoes"],
-        "optional": ["bag", "outerwear"]
-    },
-    "interview": {
-        "required": ["top", "bottom", "shoes"],
-        "optional": ["outerwear", "bag"]
-    },
-    "dinner": {
-        "required": ["top", "bottom", "shoes"],
-        "optional": ["bag", "accessory"]
-    },
-    "university": {
-        "required": ["top", "bottom", "shoes"],
-        "optional": ["bag"]
-    },
-    "party": {
-        "required": ["top", "bottom", "shoes"],
-        "optional": ["bag", "accessory"]
-    },
-    "casual": {
-        "required": ["top", "bottom"],
-        "optional": ["shoes", "accessory"]
-    }
-}
+import json
+from functools import lru_cache
+from pathlib import Path
+from typing import List, Dict, Tuple, Any
 
-DEFAULT_REQUIREMENTS = {
-    "required": ["top", "bottom", "shoes"],
-    "optional": ["accessory", "bag"]
-}
+from shared.schemas.agent1_schemas import UserRequirements
+
+
+RULES_PATH = Path(__file__).resolve().parents[1] / "config" / "outfit_rules.json"
+
+
+@lru_cache(maxsize=1)
+def load_outfit_rules() -> Dict[str, Any]:
+    with open(RULES_PATH, "r", encoding="utf-8") as f:
+        return json.load(f)
 
 
 class OutfitRequirementEngine:
@@ -57,17 +28,52 @@ class OutfitRequirementEngine:
 
     def determine_requirements(self, user_reqs: UserRequirements) -> Tuple[List[str], List[str]]:
         """
-        Determines the list of required categories and optional categories
-        based on the user's occasion and desired style.
+        Priority:
+        1. Explicit garment requests in the user text (e.g. frock -> dress)
+        2. Occasion-based full outfit template
+        3. Default full outfit (only when no garment and no occasion)
         """
+        rules = load_outfit_rules()
+        requested = [c.lower() for c in (user_reqs.requested_categories or [])]
+
+        if requested:
+            required: List[str] = []
+            optional: List[str] = []
+            by_req = rules.get("by_requested_category", {})
+            for cat in requested:
+                tmpl = by_req.get(cat)
+                if not tmpl:
+                    # Unknown category: treat the category itself as required
+                    if cat not in required:
+                        required.append(cat)
+                    continue
+                for r in tmpl.get("required", []):
+                    if r not in required:
+                        required.append(r)
+                for o in tmpl.get("optional", []):
+                    if o not in optional and o not in required:
+                        optional.append(o)
+
+            # If user asked only for a dress/top/etc., do not force a full 3-piece outfit
+            return required, optional
+
         occasion = (user_reqs.occasion or "").lower()
+        by_occasion = rules.get("by_occasion", {})
+        default = rules.get("default_full_outfit", {"required": ["top", "bottom", "shoes"], "optional": []})
 
-        rule = OCCASION_REQUIREMENT_RULES.get(occasion, DEFAULT_REQUIREMENTS)
-        required = list(rule["required"])
-        optional = list(rule["optional"])
+        if occasion and occasion in by_occasion:
+            rule = by_occasion[occasion]
+        elif occasion:
+            rule = default
+        else:
+            # No occasion and no explicit garment → keep a conservative full-outfit default
+            rule = default
 
-        # Style-based adjustments: if formal or elegant, ensure shoes are required
-        if any(s in ["formal", "semi_formal", "elegant"] for s in user_reqs.style):
+        required = list(rule.get("required", []))
+        optional = list(rule.get("optional", []))
+
+        shoe_styles = rules.get("styles_requiring_shoes", [])
+        if any(s in shoe_styles for s in user_reqs.style):
             if "shoes" not in required:
                 required.append("shoes")
 

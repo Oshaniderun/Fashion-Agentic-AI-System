@@ -1,8 +1,5 @@
 import type { ClothingAttributes } from '../types';
-
-const CATEGORIES = ['top', 'bottom', 'dress', 'outerwear', 'shoes', 'bag', 'accessory'];
-const PATTERNS = ['solid', 'striped', 'checked', 'floral', 'printed', 'polka_dot', 'textured', 'unknown'];
-const STYLES = ['casual', 'smart_casual', 'formal', 'semi_formal', 'elegant', 'streetwear', 'minimalist'];
+import { CLOTHING_CATEGORIES, CLOTHING_PATTERNS, CLOTHING_STYLES } from '../constants/clothing';
 
 interface Props {
   value: ClothingAttributes;
@@ -25,7 +22,7 @@ export function ClothingAttributeEditor({ value, onChange, aiDetected }: Props) 
         <div className="field">
           <label>Category</label>
           <select value={value.category} onChange={(e) => set('category', e.target.value)}>
-            {CATEGORIES.map((c) => (
+            {CLOTHING_CATEGORIES.map((c) => (
               <option key={c} value={c}>
                 {c}
               </option>
@@ -54,7 +51,7 @@ export function ClothingAttributeEditor({ value, onChange, aiDetected }: Props) 
         <div className="field">
           <label>Pattern</label>
           <select value={value.pattern} onChange={(e) => set('pattern', e.target.value)}>
-            {PATTERNS.map((p) => (
+            {CLOTHING_PATTERNS.map((p) => (
               <option key={p} value={p}>
                 {p}
               </option>
@@ -64,7 +61,7 @@ export function ClothingAttributeEditor({ value, onChange, aiDetected }: Props) 
         <div className="field">
           <label>Style</label>
           <select value={value.style} onChange={(e) => set('style', e.target.value)}>
-            {STYLES.map((s) => (
+            {CLOTHING_STYLES.map((s) => (
               <option key={s} value={s}>
                 {s.replace(/_/g, ' ')}
               </option>

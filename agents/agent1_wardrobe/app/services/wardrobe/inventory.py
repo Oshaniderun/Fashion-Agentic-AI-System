@@ -4,7 +4,7 @@ Wardrobe Inventory Database Operations Service.
 
 from typing import List, Optional
 from sqlalchemy.orm import Session
-from sqlalchemy import desc
+from sqlalchemy import desc, func
 
 from app.models.wardrobe import WardrobeItem
 from app.schemas.wardrobe import WardrobeItemCreate, WardrobeItemUpdate
@@ -26,13 +26,13 @@ class WardrobeInventoryService:
         """Queries wardrobe items for a given user with optional attribute filtering."""
         query = db.query(WardrobeItem).filter(WardrobeItem.user_id == user_id)
         if category:
-            query = query.filter(WardrobeItem.category == category.lower())
+            query = query.filter(func.lower(WardrobeItem.category) == category.strip().lower())
         if colour:
-            query = query.filter(WardrobeItem.colour == colour.lower())
+            query = query.filter(func.lower(WardrobeItem.colour) == colour.strip().lower())
         if style:
-            query = query.filter(WardrobeItem.style == style.lower())
+            query = query.filter(func.lower(WardrobeItem.style) == style.strip().lower().replace(" ", "_"))
         if pattern:
-            query = query.filter(WardrobeItem.pattern == pattern.lower())
+            query = query.filter(func.lower(WardrobeItem.pattern) == pattern.strip().lower().replace(" ", "_"))
         return query.order_by(desc(WardrobeItem.created_at)).all()
 
     def get_item_by_id(self, db: Session, item_id: int, user_id: int) -> Optional[WardrobeItem]:

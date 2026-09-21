@@ -40,6 +40,18 @@ class UserRequirements(BaseModel):
     budget: Optional[float] = Field(
         None, gt=0, description="Stated user budget ceiling in LKR. None if unmentioned; never hallucinated."
     )
+    requested_categories: List[str] = Field(
+        default_factory=list,
+        description="Explicit garment categories requested (e.g. ['dress'] for frock/dress).",
+    )
+    requested_types: List[str] = Field(
+        default_factory=list,
+        description="Explicit garment type words from the request (e.g. ['frock', 'blouse']).",
+    )
+    pattern_preferences: List[str] = Field(
+        default_factory=list,
+        description="Requested patterns (e.g. ['checked', 'striped']). Empty if unspecified.",
+    )
     additional_preferences: List[str] = Field(
         default_factory=list,
         description="Additional user preferences or constraints extracted from the text."
@@ -101,6 +113,7 @@ class Agent2SearchRequirement(BaseModel):
     missing_categories: List[str] = Field(..., description="Categories Agent 2 needs to query.")
     style: List[str] = Field(default_factory=list, description="Target styles to filter.")
     colour: List[str] = Field(default_factory=list, description="Target colors.")
+    pattern: List[str] = Field(default_factory=list, description="Target patterns (checked, striped, etc.).")
     occasion: Optional[str] = Field(None, description="Event context.")
     budget_remaining: Optional[float] = Field(None, description="Maximum budget allocated.")
     query_text: Optional[str] = Field(None, description="Synthesized expanded query for BM25 / vector search.")
