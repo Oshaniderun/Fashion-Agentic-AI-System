@@ -10,13 +10,13 @@
     "casual": ["casual outing", "weekend outing", "hangout", "coffee", "brunch", "errands"]
   },
   "styles": {
-    "semi_formal": ["semi-formal", "semi formal", "not too formal", "dressy casual", "smart evening"],
+    "semi_formal": ["semi-formal", "semi formal", "not too formal", "dressy casual", "smart evening", "moderately formal"],
     "elegant": ["elegant", "classy", "sophisticated", "chic", "refined", "graceful"],
     "smart_casual": ["smart casual", "smart-casual", "business casual", "polished casual"],
-    "formal": ["formal", "black tie", "suit and tie", "strictly formal"],
-    "casual": ["casual", "laid back", "relaxed", "everyday", "comfortable"],
+    "formal": ["formal", "black tie", "suit and tie", "strictly formal", "professional"],
+    "casual": ["laid back", "relaxed", "everyday", "comfortable", "casual wear", "casual outfit", "casual look"],
     "streetwear": ["streetwear", "urban", "edgy", "oversized"],
-    "minimalist": ["minimalist", "minimal", "clean", "simple"]
+    "minimalist": ["minimalist", "minimal", "clean look", "simple look"]
   },
   "colours": {
     "dark": ["dark", "deep", "charcoal", "dark grey", "dark colours", "dark colors"],
@@ -47,11 +47,11 @@
     },
     "bottom": {
       "category": "bottom",
-      "synonyms": ["bottom", "jeans", "trousers", "pants", "skirt", "shorts", "leggings", "palazzo"]
+      "synonyms": ["bottom", "jeans", "trousers", "trouser", "pants", "pant", "skirt", "shorts", "leggings", "palazzo", "slacks", "chinos"]
     },
     "shoes": {
       "category": "shoes",
-      "synonyms": ["shoes", "footwear", "loafers", "sneakers", "heels", "sandals", "boots", "flats", "slippers", "slipper"]
+      "synonyms": ["shoes", "shoe", "footwear", "loafers", "loafer", "sneakers", "sneaker", "heels", "heel", "sandals", "sandal", "boots", "boot", "flats", "flat", "slippers", "slipper"]
     },
     "outerwear": {
       "category": "outerwear",

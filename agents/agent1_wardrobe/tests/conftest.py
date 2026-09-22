@@ -17,9 +17,9 @@ from sqlalchemy.pool import StaticPool
 
 from app.main import app
 from app.models.database import Base, get_db
-from app.models.user import User
-from app.models.wardrobe import WardrobeItem
-from app.models.analysis import AnalysisRecord  # noqa: F401 — register table for create_all
+from shared.models.user import User                   # shared table
+from app.models.wardrobe import WardrobeItem          # Agent 1-owned table
+from shared.models.analysis_record import AnalysisRecord  # noqa: F401 — shared table, register for create_all
 from app.core.security import hash_password
 
 # Use a shared in-memory SQLite database across all test modules

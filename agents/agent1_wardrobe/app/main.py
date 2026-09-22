@@ -11,13 +11,17 @@ _REPO_ROOT = Path(__file__).resolve().parents[3]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
+# ── IMPORTANT: load agent config FIRST (populates os.environ from .env)
+# shared/models/database.py reads DATABASE_URL from os.environ at import time,
+# so the agent's .env must be applied before any shared model is imported.
+from app.core.config import settings  # noqa: E402 — must be before shared imports
+
 import time
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from app.core.config import settings
 from app.core.logging import logger
 from app.models.database import init_db, SessionLocal
 from app.models import User, WardrobeItem, AnalysisRecord  # noqa: F401 — register ORM tables

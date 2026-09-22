@@ -1,39 +1,19 @@
 """
-Database engine, session management, and base declarative class.
-Supports SQLite out-of-the-box and easy configuration for PostgreSQL.
+Agent 1 database session — thin wrapper around the shared database module.
+
+All session/engine management is in shared/models/database.py.
+This module exists so Agent 1's internal imports continue to work
+unchanged (from app.models.database import get_db, init_db, Base, etc.)
+while the actual implementation is shared.
 """
 
-from sqlalchemy import create_engine
-from sqlalchemy.orm import declarative_base, sessionmaker, Session
-from typing import Generator
-
-from app.core.config import settings
-
-# For SQLite, enable check_same_thread=False
-connect_args = {}
-if settings.DATABASE_URL.startswith("sqlite"):
-    connect_args = {"check_same_thread": False}
-
-engine = create_engine(
-    settings.DATABASE_URL,
-    connect_args=connect_args,
-    echo=False
+# Re-export everything Agent 1 internally uses from the shared layer.
+from shared.models.database import (  # noqa: F401
+    Base,
+    engine,
+    SessionLocal,
+    get_shared_db as get_db,
+    init_shared_db as init_db,
 )
 
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-Base = declarative_base()
-
-
-def get_db() -> Generator[Session, None, None]:
-    """FastAPI dependency for obtaining a database session."""
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
-def init_db() -> None:
-    """Initializes tables in the database."""
-    Base.metadata.create_all(bind=engine)
+__all__ = ["Base", "engine", "SessionLocal", "get_db", "init_db"]

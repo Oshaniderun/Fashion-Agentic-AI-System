@@ -26,9 +26,12 @@ def test_section_50_primary_demo_request():
     assert "elegant" in reqs.style
     assert "semi_formal" in reqs.style
 
-    # 3. Color extraction: excludes 'bright', infers preference for dark/neutral
+    # 3. Color extraction:
+    #    - User EXPLICITLY excluded 'bright' -> must appear in excluded_colours
+    #    - User did NOT state any positive preference -> colour_preferences must be EMPTY
+    #    (auto-inferring dark/neutral from bright exclusion is a bug: user didn't say that)
     assert "bright" in reqs.excluded_colours
-    assert any(c in reqs.colour_preferences for c in ["dark", "neutral"])
+    assert reqs.colour_preferences == [] or reqs.colour_preferences is None
 
     # 4. Uncertainty preservation: budget was not mentioned, must NOT be hallucinated
     assert reqs.budget is None

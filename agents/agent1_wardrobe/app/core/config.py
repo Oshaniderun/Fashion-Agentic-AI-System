@@ -57,6 +57,12 @@ class Settings(BaseSettings):
 
 settings = Settings()
 
+# ── Propagate DATABASE_URL into os.environ so that shared/models/database.py
+# (which reads os.environ at import time) picks up the correct value from .env.
+# This is the handshake between pydantic-settings and the shared DB layer.
+import os as _os
+_os.environ.setdefault("DATABASE_URL", settings.DATABASE_URL)
+
 # Ensure uploads directory exists
 upload_path = Path(settings.UPLOAD_DIR)
 upload_path.mkdir(parents=True, exist_ok=True)

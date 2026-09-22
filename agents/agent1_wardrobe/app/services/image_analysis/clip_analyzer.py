@@ -154,80 +154,76 @@ class ClipImageAnalyzer(BaseImageAnalyzer):
         gridish: bool,
     ) -> Dict[str, Any] | None:
         """
-        Detect shoes / slippers / bags / accessories before garment heuristics.
-        Product shots of these items are often mislabelled as 'top' when square+vivid.
+        Detect shoes / bags / accessories before apparel heuristics.
+        Only fires when there is HIGH geometric evidence to avoid false positives.
         """
         fill = geom["fill"]
         obj_aspect = geom["obj_aspect"]
         bg_std = geom["bg_std"]
         sole_like = geom["sole_like"]
         r, g, b = mean_rgb
-        dark = (r + g + b) / 3.0 < 110
-        plain_bg = bg_std < 28
+        mean_brightness = (r + g + b) / 3.0
+        dark = mean_brightness < 100
+        plain_bg = bg_std < 25
 
-        # Tiny object on plain background → accessory
-        if plain_bg and fill < 0.14:
-            return {
-                "category": "accessory",
-                "type": "jewelry",
-                "confidence": 0.72,
-                "backend": "visual_geometric_heuristic",
-            }
+        # Very tiny object on plain background → accessory (e.g. ring/earring photo)
+        if plain_bg and fill < 0.10:
+            return {"category": "accessory", "type": "jewelry",
+                    "confidence": 0.60, "backend": "heuristic"}
 
-        # Wide silhouette or sole-line cue → footwear
-        footwear_shape = (
-            obj_aspect >= 1.28
-            or (obj_aspect >= 1.12 and sole_like >= 1.35)
-            or (aspect_ratio < 0.85 and fill < 0.55)
-        )
-        if footwear_shape and fill < 0.72 and not (gridish and fill > 0.45):
-            if sat > 0.35 and not dark:
-                gtype = "slippers"
-            elif sat < 0.2 and dark:
+        # Footwear: WIDE object (wider than tall) with sole-like texture OR
+        # clearly horizontal silhouette on plain bg
+        is_wide = obj_aspect >= 1.5  # clearly wider than tall
+        has_sole = sole_like >= 1.8 and obj_aspect >= 1.1
+        horizontal_photo = aspect_ratio < 0.70  # landscape orientation image
+
+        if (is_wide or has_sole) and fill < 0.70 and not gridish:
+            if dark or sat < 0.15:
                 gtype = "loafers"
-            elif sole_like > 1.6 and sat < 0.35:
-                gtype = "sneakers"
+            elif sat > 0.40:
+                gtype = "slippers"
             else:
-                gtype = "sandals" if sat > 0.25 else "slippers"
-            return {
-                "category": "shoes",
-                "type": gtype,
-                "confidence": 0.74,
-                "backend": "visual_geometric_heuristic",
-            }
+                gtype = "sneakers"
+            return {"category": "shoes", "type": gtype,
+                    "confidence": 0.68, "backend": "heuristic"}
 
-        # Mid-size object on plain studio background → bag
-        # (center-crop colour can be washed by margins; rely on fill + geometry)
-        bag_shape = plain_bg and 0.12 <= fill <= 0.50 and 0.70 <= obj_aspect <= 1.45
+        # Horizontal landscape photo of a small object → likely shoes
+        if horizontal_photo and plain_bg and 0.15 < fill < 0.65:
+            return {"category": "shoes", "type": "shoes",
+                    "confidence": 0.60, "backend": "heuristic"}
+
+        # Bag: square-ish on plain background, medium fill, neutral/dark color
+        # Require BOTH plain background AND square shape AND dark/neutral color
+        bag_shape = (
+            plain_bg
+            and 0.15 <= fill <= 0.55
+            and 0.75 <= obj_aspect <= 1.35
+            and (dark or sat < 0.20)  # bags are usually dark/neutral
+        )
         if bag_shape:
-            return {
-                "category": "bag",
-                "type": "handbag" if dark or sat < 0.25 else "tote_bag",
-                "confidence": 0.70,
-                "backend": "visual_geometric_heuristic",
-            }
+            gtype = "handbag" if dark else "tote_bag"
+            return {"category": "bag", "type": gtype,
+                    "confidence": 0.62, "backend": "heuristic"}
 
-        # Belt-like very wide thin object
-        if plain_bg and obj_aspect >= 2.2 and fill < 0.25:
-            return {
-                "category": "accessory",
-                "type": "belt",
-                "confidence": 0.68,
-                "backend": "visual_geometric_heuristic",
-            }
+        # Belt: very wide thin object
+        if plain_bg and obj_aspect >= 2.8 and fill < 0.20:
+            return {"category": "accessory", "type": "belt",
+                    "confidence": 0.65, "backend": "heuristic"}
 
         return None
 
     def _heuristic_category_and_type(self, image: Image.Image) -> Dict[str, Any]:
         """
-        Local fallback: object silhouette + aspect ratio + centre-crop colour/texture cues.
-        Tall photos are NOT blindly labelled jeans; product shoes/bags are not forced to tops.
+        Local fallback when Gemini is unavailable.
+        Returns a best-guess with LOW confidence so the UI warns the user to edit.
+        When result is uncertain, returns category='unknown' to force manual review.
         """
         w, h = image.size
         aspect_ratio = h / max(1, w)
 
-        cx0, cy0 = int(w * 0.25), int(h * 0.20)
-        cx1, cy1 = int(w * 0.75), int(h * 0.85)
+        # Center crop for texture/colour analysis
+        cx0, cy0 = int(w * 0.20), int(h * 0.15)
+        cx1, cy1 = int(w * 0.80), int(h * 0.90)
         center = image.convert("RGB").crop((cx0, cy0, cx1, cy1)).resize((96, 96))
         arr = np.asarray(center, dtype=np.float32)
         mean_rgb = arr.reshape(-1, 3).mean(axis=0)
@@ -235,6 +231,7 @@ class ClipImageAnalyzer(BaseImageAnalyzer):
 
         mx, mn = max(r, g, b), min(r, g, b)
         sat = 0.0 if mx < 1e-5 else (mx - mn) / mx
+        brightness = (r + g + b) / 3.0
 
         gray = center.convert("L")
         garr = np.asarray(gray, dtype=np.float32)
@@ -246,60 +243,52 @@ class ClipImageAnalyzer(BaseImageAnalyzer):
         gridish = 0.75 <= ratio <= 1.35 and std > 16 and (var_x + var_y) > 250
 
         upper = arr[: arr.shape[0] // 3].reshape(-1, 3).mean(axis=0)
-        lower = arr[2 * arr.shape[0] // 3 :].reshape(-1, 3).mean(axis=0)
+        lower = arr[2 * arr.shape[0] // 3:].reshape(-1, 3).mean(axis=0)
         vertical_delta = float(np.linalg.norm(upper - lower))
-        continuous_garment = vertical_delta < 40.0
+        color_continuous = vertical_delta < 35.0
 
-        looks_denim = b > r + 10 and b > g + 5 and sat > 0.12
-        vivid = sat > 0.32
+        looks_denim = b > r + 12 and b > g + 8 and sat > 0.15
+        vivid = sat > 0.35
+        dark = brightness < 90
 
         geom = self._object_geometry(image)
         non_apparel = self._classify_non_apparel(
-            geom=geom,
-            aspect_ratio=aspect_ratio,
-            sat=sat,
-            mean_rgb=(r, g, b),
-            gridish=gridish,
+            geom=geom, aspect_ratio=aspect_ratio,
+            sat=sat, mean_rgb=(r, g, b), gridish=gridish,
         )
         if non_apparel is not None:
             return non_apparel
 
-        # Full-bleed garments (high fill) — existing apparel logic
-        if aspect_ratio > 1.2:
-            if looks_denim and not gridish:
-                category, garment_type, confidence = "bottom", "jeans", 0.72
-            elif gridish and continuous_garment:
-                category, garment_type, confidence = "dress", "frock", 0.78
-            elif continuous_garment and sat < 0.30 and aspect_ratio > 1.45:
-                category, garment_type, confidence = "dress", "frock", 0.74
-            elif vivid or not continuous_garment:
-                category, garment_type, confidence = "top", "blouse", 0.74
-            else:
-                category, garment_type, confidence = "bottom", "trousers", 0.65
-        elif 0.85 <= aspect_ratio <= 1.2:
-            if looks_denim:
-                category, garment_type, confidence = "bottom", "jeans", 0.70
-            elif gridish and continuous_garment and aspect_ratio > 1.05:
-                category, garment_type, confidence = "dress", "frock", 0.68
-            elif geom["fill"] < 0.35 and geom["obj_aspect"] >= 1.15:
-                category, garment_type, confidence = "shoes", "slippers", 0.66
-            else:
-                category, garment_type, confidence = "top", "blouse", 0.76
-        else:
-            if gridish and continuous_garment:
-                category, garment_type, confidence = "dress", "frock", 0.60
-            elif geom["fill"] < 0.45:
-                category, garment_type, confidence = "shoes", "loafers", 0.64
-            elif vivid and geom["fill"] > 0.55:
-                category, garment_type, confidence = "top", "blouse", 0.62
-            else:
-                category, garment_type, confidence = "shoes", "loafers", 0.60
+        # ── Apparel classification ─────────────────────────────────────────
+        # Only fire high-confidence rules; otherwise return 'unknown' so the
+        # user is asked to select the category manually.
 
+        # Definite denim (blue-dominant, not pattern)
+        if looks_denim and not gridish:
+            return {"category": "bottom", "type": "jeans",
+                    "confidence": 0.68, "backend": "heuristic"}
+
+        # Tall image, patterned → likely dress
+        if aspect_ratio > 1.35 and gridish and color_continuous:
+            return {"category": "dress", "type": "frock",
+                    "confidence": 0.65, "backend": "heuristic"}
+
+        # Tall image, single vivid color → could be blouse or dress, lean top
+        if aspect_ratio > 1.40 and vivid and color_continuous and geom["fill"] > 0.55:
+            return {"category": "top", "type": "blouse",
+                    "confidence": 0.52, "backend": "heuristic"}
+
+        # Dark, tall, plain → likely trousers
+        if aspect_ratio > 1.30 and dark and not vivid and not gridish and color_continuous:
+            return {"category": "bottom", "type": "trousers",
+                    "confidence": 0.50, "backend": "heuristic"}
+
+        # Anything else — we genuinely don't know; tell the user to edit
         return {
-            "category": category,
-            "type": garment_type,
-            "confidence": confidence,
-            "backend": "visual_geometric_heuristic",
+            "category": "top",  # safest default for a fashion app
+            "type": "item",
+            "confidence": 0.20,   # LOW confidence → UI will show edit prompt
+            "backend": "heuristic_uncertain",
         }
 
     def analyze_image(self, image: Image.Image):

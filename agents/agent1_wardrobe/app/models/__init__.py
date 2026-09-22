@@ -1,5 +1,8 @@
 """
-Models package initialization.
+Agent 1 models package.
+
+Shared tables (User, AnalysisRecord) are sourced from shared/models/.
+Agent-local table (WardrobeItem) is defined here and registers on the same shared Base.
 """
 
 from app.models.database import Base, engine, SessionLocal, get_db, init_db

@@ -1,22 +1,8 @@
 """
-User ORM model.
+User model — Agent 1 re-export from shared layer.
+Import path stays the same for Agent 1 internals: from app.models.user import User
 """
 
-from datetime import datetime, timezone
-from sqlalchemy import Column, Integer, String, DateTime
-from sqlalchemy.orm import relationship
+from shared.models.user import User  # noqa: F401
 
-from app.models.database import Base
-
-
-class User(Base):
-    __tablename__ = "users"
-
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(100), nullable=False)
-    email = Column(String(255), unique=True, index=True, nullable=False)
-    password_hash = Column(String(255), nullable=False)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
-
-    wardrobe_items = relationship("WardrobeItem", back_populates="user", cascade="all, delete-orphan")
-    analysis_records = relationship("AnalysisRecord", back_populates="user", cascade="all, delete-orphan")
+__all__ = ["User"]

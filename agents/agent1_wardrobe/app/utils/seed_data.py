@@ -7,8 +7,8 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 from sqlalchemy.orm import Session
 
-from app.models.user import User
-from app.models.wardrobe import WardrobeItem
+from shared.models.user import User          # shared table
+from app.models.wardrobe import WardrobeItem  # Agent 1-owned table
 from app.core.security import hash_password
 from app.core.config import settings
 from app.core.logging import logger
