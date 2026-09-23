@@ -1,0 +1,44 @@
+[
+  {
+    "id": "eval_01",
+    "expected": {
+      "occasion": "engagement",
+      "style": ["elegant", "semi_formal"],
+      "colour_preferences": ["dark", "neutral"],
+      "excluded_colours": ["bright"],
+      "budget": null
+    }
+  },
+  {
+    "id": "eval_02",
+    "expected": {
+      "occasion": "university",
+      "style": ["smart_casual"],
+      "budget": 5000.0
+    }
+  },
+  {
+    "id": "eval_03",
+    "expected": {
+      "occasion": "interview",
+      "style": ["formal"]
+    }
+  },
+  {
+    "id": "eval_04",
+    "expected": {
+      "occasion": "casual",
+      "style": ["casual"],
+      "colour_preferences": ["neutral"]
+    }
+  },
+  {
+    "id": "eval_05",
+    "expected": {
+      "occasion": "wedding",
+      "style": ["elegant"],
+      "colour_preferences": ["dark"],
+      "budget": 15000.0
+    }
+  }
+]

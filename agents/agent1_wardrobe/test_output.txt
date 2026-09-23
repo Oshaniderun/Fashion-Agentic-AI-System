@@ -1,0 +1,11 @@
+============================= test session starts =============================
+platform win32 -- Python 3.12.7, pytest-9.1.1, pluggy-1.6.0 -- D:\IRWA\agents\agent1_wardrobe\.venv\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: D:\IRWA\agents\agent1_wardrobe
+plugins: anyio-4.15.1
+collecting ... collected 8 items
+
+tests/test_nlp.py::test_section_50_primary_demo_request PASSED           [ 12%]
+tests/test_nlp.py::test_budget_extraction_and_currency_variants PASSED   [ 25%]
+tests/test_nlp.py::test_uncertainty_preservation_no_hallucinations PASSED [ 37%]
+tests/test_nlp.py::test_synonym_normalization PASSED                     [ 50%]

@@ -97,7 +97,7 @@ with purpose, inputs/outputs, and how to run it.
 - **NLP:** spaCy + LLM structured extraction
 - **CV:** CLIP / FashionCLIP
 - **IR:** BM25 (rank-bm25) + Sentence-Transformers embeddings + Chroma
-- **Database:** PostgreSQL (SQLite acceptable for local dev)
+- **Database:** PostgreSQL 
 - **Auth:** JWT (user-facing) + shared service token (agent-to-agent)
 - **Frontend:** React
 
