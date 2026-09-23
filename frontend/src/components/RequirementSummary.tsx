@@ -6,12 +6,19 @@ export function RequirementSummary({ requirements }: { requirements: UserRequire
     { label: 'Style', value: requirements.style.length ? requirements.style.join(', ') : 'Not specified' },
     {
       label: 'Requested item',
-      value:
-        (requirements.requested_types?.length
+      value: (() => {
+        if (requirements.identified_items && requirements.identified_items.length > 0) {
+          const reqItems = requirements.identified_items.filter((i) => i.role === 'requested');
+          if (reqItems.length > 0) {
+            return reqItems.map((i) => i.type || i.category).join(', ');
+          }
+        }
+        return requirements.requested_types?.length
           ? requirements.requested_types.join(', ')
           : requirements.requested_categories?.length
             ? requirements.requested_categories.join(', ')
-            : 'Not specified'),
+            : 'Not specified';
+      })(),
     },
     {
       label: 'Pattern',

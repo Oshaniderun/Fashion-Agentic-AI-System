@@ -39,7 +39,7 @@ def test_missing_shoes_detection_scenario():
     required_cats, optional_cats = outfit_requirement_engine.determine_requirements(reqs)
     assert "top" in required_cats
     assert "bottom" in required_cats
-    assert "shoes" in required_cats
+    assert "footwear" in required_cats
 
     outfit_reqs, search_handoff, agent2_handoff = missing_item_detector.analyze_missing(
         required_categories=required_cats,
@@ -51,17 +51,17 @@ def test_missing_shoes_detection_scenario():
 
     assert "top" in outfit_reqs.available_categories
     assert "bottom" in outfit_reqs.available_categories
-    assert "shoes" in outfit_reqs.missing_categories
+    assert "footwear" in outfit_reqs.missing_categories
 
-    assert "shoes" in search_handoff.missing_categories
-    assert "shoes" in search_handoff.categories
+    assert "footwear" in search_handoff.missing_categories
+    assert "footwear" in search_handoff.categories
     assert search_handoff.occasion == "engagement"
     assert search_handoff.budget_remaining == 8000.0
     assert search_handoff.maximum_price == 8000.0
-    assert "shoes" in search_handoff.query_text.lower()
+    assert "footwear" in search_handoff.query_text.lower()
 
     assert agent2_handoff.request_id == "REQ-TEST-001"
-    assert "shoes" in agent2_handoff.wardrobe_status.missing_categories
+    assert "footwear" in agent2_handoff.wardrobe_status.missing_categories
     assert any(i.wardrobe_id == "W001" for i in agent2_handoff.available_items)
 
 

@@ -31,7 +31,7 @@ def test_black_blouse_blue_jeans_beige_loafers_compatibility():
         ),
         WardrobeSummaryItem(
             wardrobe_id="W003",
-            category="shoes",
+            category="footwear",
             type="loafers",
             colour="beige",
             formality=0.65,

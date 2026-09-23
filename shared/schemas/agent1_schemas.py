@@ -21,6 +21,14 @@ from shared.constants import (  # noqa: F401 — kept for schema consumers / doc
 # Core Sub-Models
 # ---------------------------------------------------------------------------
 
+class RequestedItem(BaseModel):
+    """Represents a single clothing item mentioned in the user's request with its role."""
+    category: str = Field(..., description="Normalized category (top, bottom, shoes, dress, bag, accessory, outerwear).")
+    type: Optional[str] = Field(None, description="Specific garment type (blouse, jeans, heel). None if only category known.")
+    colour: Optional[str] = Field(None, description="Item-specific colour if stated (e.g. 'black' in 'black heel'). None if no colour modifier.")
+    role: str = Field("requested", description="'existing_reference' = user says they own it, 'requested' = user wants it.")
+
+
 class UserRequirements(BaseModel):
     occasion: Optional[str] = Field(
         None, description="Target occasion (e.g. 'engagement', 'wedding', 'university'). None if unspecified."
@@ -31,7 +39,7 @@ class UserRequirements(BaseModel):
     )
     colour_preferences: List[str] = Field(
         default_factory=list,
-        description="Preferred color families (e.g. ['dark', 'neutral']). Empty list if unspecified."
+        description="GENERAL colour preferences only (e.g. ['dark', 'neutral']). Item-specific colours go in identified_items."
     )
     excluded_colours: List[str] = Field(
         default_factory=list,
@@ -47,6 +55,10 @@ class UserRequirements(BaseModel):
     requested_types: List[str] = Field(
         default_factory=list,
         description="Explicit garment type words from the request (e.g. ['frock', 'blouse']).",
+    )
+    identified_items: List[RequestedItem] = Field(
+        default_factory=list,
+        description="Per-item structured extraction with role (existing_reference/requested) and item-specific colour.",
     )
     pattern_preferences: List[str] = Field(
         default_factory=list,
@@ -152,6 +164,10 @@ class Agent2SearchRequirement(BaseModel):
     )
     query_text: Optional[str] = Field(
         None, description="Deduped expanded query for BM25 / vector search."
+    )
+    matching_reference_items: List[RequestedItem] = Field(
+        default_factory=list,
+        description="Items the user claimed to own, for context matching.",
     )
 
     @model_validator(mode="after")

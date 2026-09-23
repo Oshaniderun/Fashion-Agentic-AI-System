@@ -11,11 +11,11 @@ from PIL import Image
 from app.services.image_analysis.base import BaseImageAnalyzer
 from app.core.logging import logger
 
-FASHION_CATEGORIES = ["top", "bottom", "shoes", "outerwear", "dress", "bag", "accessory"]
+FASHION_CATEGORIES = ["top", "bottom", "footwear", "outerwear", "dress", "bag", "accessory"]
 GARMENT_TYPES = {
     "top": ["blouse", "shirt", "t-shirt", "sweater", "tank_top"],
     "bottom": ["jeans", "trousers", "skirt", "shorts"],
-    "shoes": ["loafers", "sneakers", "boots", "heels", "sandals", "slippers"],
+    "footwear": ["loafers", "sneakers", "boots", "heels", "sandals", "slippers"],
     "outerwear": ["blazer", "jacket", "coat", "cardigan"],
     "dress": ["midi_dress", "maxi_dress", "cocktail_dress", "frock"],
     "bag": ["handbag", "tote_bag", "clutch", "backpack"],
@@ -184,12 +184,12 @@ class ClipImageAnalyzer(BaseImageAnalyzer):
                 gtype = "slippers"
             else:
                 gtype = "sneakers"
-            return {"category": "shoes", "type": gtype,
+            return {"category": "footwear", "type": gtype,
                     "confidence": 0.68, "backend": "heuristic"}
 
         # Horizontal landscape photo of a small object → likely shoes
         if horizontal_photo and plain_bg and 0.15 < fill < 0.65:
-            return {"category": "shoes", "type": "shoes",
+            return {"category": "footwear", "type": "footwear",
                     "confidence": 0.60, "backend": "heuristic"}
 
         # Bag: square-ish on plain background, medium fill, neutral/dark color

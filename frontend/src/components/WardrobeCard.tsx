@@ -16,7 +16,6 @@ export function WardrobeCard({ item, onDelete }: Props) {
         <div className="body">
           <div className="row" style={{ justifyContent: 'space-between' }}>
             <span className="badge badge-muted">{item.wardrobe_code}</span>
-            <ConfidenceBadge value={item.confidence} />
           </div>
           <h3 style={{ marginTop: 8 }}>
             {item.colour} {item.type}

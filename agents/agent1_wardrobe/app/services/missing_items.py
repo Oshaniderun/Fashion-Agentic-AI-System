@@ -20,7 +20,6 @@ _CATEGORY_LABELS = {
     "top",
     "bottom",
     "dress",
-    "shoes",
     "footwear",
     "outerwear",
     "bag",
@@ -49,13 +48,13 @@ _TYPE_TO_CATEGORY = {
     "gown": "dress",
     "midi_dress": "dress",
     "maxi_dress": "dress",
-    "loafers": "shoes",
-    "sneakers": "shoes",
-    "boots": "shoes",
-    "heels": "shoes",
-    "sandals": "shoes",
-    "slippers": "shoes",
-    "flats": "shoes",
+    "loafers": "footwear",
+    "sneakers": "footwear",
+    "boots": "footwear",
+    "heels": "footwear",
+    "sandals": "footwear",
+    "slippers": "footwear",
+    "flats": "footwear",
     "blazer": "outerwear",
     "jacket": "outerwear",
     "coat": "outerwear",
@@ -92,10 +91,12 @@ class MissingItemDetector:
         available: List[str] = []
         missing: List[str] = []
 
+        # Only check against actual owned_categories (database items)
         for req_cat in required_categories:
             cat_lower = req_cat.lower()
-            if cat_lower in ["shoes", "footwear"]:
-                if "shoes" in owned_categories or "footwear" in owned_categories:
+                
+            if cat_lower in ["footwear"]:
+                if "footwear" in owned_categories:
                     available.append(req_cat)
                 else:
                     missing.append(req_cat)
@@ -104,7 +105,7 @@ class MissingItemDetector:
                     available.append(req_cat)
                 else:
                     missing.append(req_cat)
-
+                    
         outfit_reqs = OutfitRequirements(
             required_categories=required_categories,
             available_categories=available,
@@ -157,18 +158,45 @@ class MissingItemDetector:
         missing: List[str],
         user_requirements: UserRequirements,
     ) -> Agent2SearchRequirement:
+        missing_norm = [c.lower() for c in missing]
+
+        # Extract matching_reference_items (always needed for context)
+        matching_refs = []
+        for item in user_requirements.identified_items:
+            role = getattr(item, 'role', None) or (item.get('role') if isinstance(item, dict) else None)
+            if role == "existing_reference":
+                matching_refs.append(item)
+
+        # If nothing is missing, Agent 2 has nothing to search for.
+        # Return a minimal brief with only reference context.
+        if not missing_norm:
+            return Agent2SearchRequirement(
+                categories=[],
+                missing_categories=[],
+                style=[],
+                colour_preferences=[],
+                colour=[],
+                pattern_preferences=[],
+                pattern=[],
+                occasion=user_requirements.occasion,
+                maximum_price=user_requirements.budget,
+                budget_remaining=user_requirements.budget,
+                query_text=None,
+                matching_reference_items=matching_refs,
+            )
+
         colours = list(user_requirements.colour_preferences or [])
         patterns = list(user_requirements.pattern_preferences or [])
         styles = list(user_requirements.style or [])
         budget = user_requirements.budget
-        missing_norm = [c.lower() for c in missing]
 
         query_text = self._build_query_text(
             missing=missing_norm,
             styles=styles,
-            colours=colours,
+            global_colours=colours,
             patterns=patterns,
-            requested_types=list(user_requirements.requested_types or []),
+            identified_items=user_requirements.identified_items,
+            matching_refs=matching_refs,
             occasion=user_requirements.occasion,
             budget=budget,
         )
@@ -185,37 +213,43 @@ class MissingItemDetector:
             maximum_price=budget,
             budget_remaining=budget,
             query_text=query_text,
+            matching_reference_items=matching_refs,
         )
 
     def _build_query_text(
         self,
         missing: List[str],
         styles: List[str],
-        colours: List[str],
+        global_colours: List[str],
         patterns: List[str],
-        requested_types: List[str],
+        identified_items: list,
+        matching_refs: list,
         occasion: str | None,
         budget: float | None,
     ) -> str:
         """
-        Build a deduped search query focused on *missing* categories only.
-        Avoids 'bottom bottom' when both requested_types and missing contain 'bottom'.
+        Build a deduped search query focused on *missing requested* categories only.
+        Only includes item-specific colours for garments that are actually missing.
         """
         missing_set = set(missing)
-
-        # Keep specific garment words that belong to a missing category
+        
         search_types: List[str] = []
-        for raw in requested_types:
-            t = raw.strip().lower().replace(" ", "_")
-            if not t or t in _CATEGORY_LABELS:
-                continue
-            mapped = _TYPE_TO_CATEGORY.get(t)
-            if mapped and mapped not in missing_set:
-                # User already owns this category — don't ask Agent 2 for it
-                continue
-            if mapped is None or mapped in missing_set:
-                if t not in search_types:
-                    search_types.append(t.replace("_", " "))
+        item_colours: List[str] = []
+
+        # Find items that the user requested AND that are missing from wardrobe
+        for item in identified_items:
+            cat = getattr(item, 'category', None) or (item.get('category') if isinstance(item, dict) else None)
+            role = getattr(item, 'role', None) or (item.get('role') if isinstance(item, dict) else None)
+            t = getattr(item, 'type', None) or (item.get('type') if isinstance(item, dict) else None)
+            c = getattr(item, 'colour', None) or (item.get('colour') if isinstance(item, dict) else None)
+            
+            if cat in missing_set and role == "requested":
+                if t and t not in _CATEGORY_LABELS:
+                    t_spaced = t.replace("_", " ")
+                    if t_spaced not in search_types:
+                        search_types.append(t_spaced)
+                if c and c not in item_colours:
+                    item_colours.append(c)
 
         # Category tokens only if no more specific type already covers them
         covered_cats = {
@@ -225,12 +259,25 @@ class MissingItemDetector:
 
         parts: List[str] = []
         parts.extend(styles)
-        parts.extend(colours)
+        parts.extend(global_colours)
+        parts.extend(item_colours)
         parts.extend(patterns)
         parts.extend(search_types)
         parts.extend(cat_tokens)
+        
         if occasion:
             parts.append(f"for {occasion}")
+            
+        if matching_refs:
+            ref_strs = []
+            for ref in matching_refs:
+                c = getattr(ref, 'colour', None) or (ref.get('colour') if isinstance(ref, dict) else None)
+                t = getattr(ref, 'type', None) or (ref.get('type') if isinstance(ref, dict) else None)
+                cat = getattr(ref, 'category', None) or (ref.get('category') if isinstance(ref, dict) else None)
+                ref_str = f"{c + ' ' if c else ''}{t or cat}"
+                ref_strs.append(ref_str)
+            parts.append(f"matching {' and '.join(ref_strs)}")
+            
         if budget:
             parts.append(f"under LKR {int(budget)}")
 

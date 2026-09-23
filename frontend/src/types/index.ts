@@ -76,6 +76,13 @@ export interface WardrobeItemCreate {
   attributes_confirmed: boolean;
 }
 
+export interface RequestedItem {
+  category: string;
+  type?: string | null;
+  colour?: string | null;
+  role: 'existing_reference' | 'requested';
+}
+
 export interface UserRequirements {
   occasion?: string | null;
   style: string[];
@@ -84,6 +91,7 @@ export interface UserRequirements {
   budget?: number | null;
   requested_categories?: string[];
   requested_types?: string[];
+  identified_items?: RequestedItem[];
   pattern_preferences?: string[];
   additional_preferences: string[];
 }
@@ -136,6 +144,7 @@ export interface Agent2SearchRequirement {
   maximum_price?: number | null;
   budget_remaining?: number | null;
   query_text?: string | null;
+  matching_reference_items?: RequestedItem[];
 }
 
 export interface Agent2AvailableItem {

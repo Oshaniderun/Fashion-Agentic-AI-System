@@ -3,7 +3,16 @@ Vision heuristic tests for frock/check detection without CLIP.
 """
 
 from PIL import Image, ImageDraw
+import pytest
 from app.services.image_analysis.analyzer import master_image_analyzer
+from app.services.image_analysis.clip_analyzer import clip_analyzer
+
+@pytest.fixture(autouse=True)
+def disable_clip():
+    original = clip_analyzer.is_loaded
+    clip_analyzer.is_loaded = False
+    yield
+    clip_analyzer.is_loaded = original
 
 
 def _make_checked_frock_like_image(path=None):
@@ -48,7 +57,7 @@ def test_wide_slipper_like_object_prefers_shoes():
     draw.ellipse([70, 90, 350, 180], fill=(40, 35, 35))
     draw.rectangle([90, 150, 330, 175], fill=(25, 20, 20))
     attrs = master_image_analyzer.analyze_image(img)
-    assert attrs.category == "shoes"
+    assert attrs.category == "footwear"
     assert attrs.type in ["slippers", "sandals", "loafers", "sneakers", "boots", "heels"]
 
 
@@ -66,6 +75,6 @@ def test_bag_like_compact_object():
     draw.rounded_rectangle([110, 120, 250, 260], radius=18, fill=(35, 30, 28))
     draw.arc([150, 95, 210, 140], 0, 180, fill=(60, 50, 45), width=6)
     attrs = master_image_analyzer.analyze_image(img)
-    assert attrs.category in ["bag", "accessory", "shoes"]
+    assert attrs.category in ["bag", "accessory", "footwear"]
     # Bag preferred; accessory/shoes acceptable over apparel mislabel
     assert attrs.category != "top"

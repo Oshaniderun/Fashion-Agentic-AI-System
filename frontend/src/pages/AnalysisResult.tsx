@@ -156,7 +156,10 @@ export function AnalysisResult() {
                       <img src={imageUrl(item.image_url)} alt={`${item.colour} ${item.type}`} />
                     )}
                     <div className="body">
-                      <span className="badge badge-muted">{item.wardrobe_id}</span>
+                      <div className="row" style={{ justifyContent: 'space-between' }}>
+                        <span className="badge badge-muted">{item.wardrobe_id}</span>
+                        <ConfidenceBadge value={item.confidence} />
+                      </div>
                       <h3 style={{ marginTop: 8, textTransform: 'capitalize' }}>
                         {item.colour} {item.type}
                       </h3>

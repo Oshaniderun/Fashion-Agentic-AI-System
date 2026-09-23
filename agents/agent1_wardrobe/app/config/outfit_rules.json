@@ -1,27 +1,27 @@
 {
   "by_occasion": {
-    "engagement": { "required": ["top", "bottom", "shoes"], "optional": ["bag", "accessory"] },
-    "wedding": { "required": ["top", "bottom", "shoes"], "optional": ["bag", "accessory", "jewelry"] },
-    "formal_event": { "required": ["top", "bottom", "shoes"], "optional": ["outerwear", "bag", "accessory"] },
-    "work": { "required": ["top", "bottom", "shoes"], "optional": ["bag", "outerwear"] },
-    "interview": { "required": ["top", "bottom", "shoes"], "optional": ["outerwear", "bag"] },
-    "dinner": { "required": ["top", "bottom", "shoes"], "optional": ["bag", "accessory"] },
-    "university": { "required": ["top", "bottom", "shoes"], "optional": ["bag"] },
-    "party": { "required": ["top", "bottom", "shoes"], "optional": ["bag", "accessory"] },
-    "casual": { "required": ["top", "bottom"], "optional": ["shoes", "accessory"] }
+    "engagement": { "required": ["top", "bottom", "footwear"], "optional": ["bag", "accessory"] },
+    "wedding": { "required": ["top", "bottom", "footwear"], "optional": ["bag", "accessory", "jewelry"] },
+    "formal_event": { "required": ["top", "bottom", "footwear"], "optional": ["outerwear", "bag", "accessory"] },
+    "work": { "required": ["top", "bottom", "footwear"], "optional": ["bag", "outerwear"] },
+    "interview": { "required": ["top", "bottom", "footwear"], "optional": ["outerwear", "bag"] },
+    "dinner": { "required": ["top", "bottom", "footwear"], "optional": ["bag", "accessory"] },
+    "university": { "required": ["top", "bottom", "footwear"], "optional": ["bag"] },
+    "party": { "required": ["top", "bottom", "footwear"], "optional": ["bag", "accessory"] },
+    "casual": { "required": ["top", "bottom"], "optional": ["footwear", "accessory"] }
   },
   "default_full_outfit": {
-    "required": ["top", "bottom", "shoes"],
+    "required": ["top", "bottom", "footwear"],
     "optional": ["accessory", "bag"]
   },
   "by_requested_category": {
-    "dress": { "required": ["dress"], "optional": ["shoes", "bag", "accessory"] },
-    "top": { "required": ["top"], "optional": ["bottom", "shoes", "accessory"] },
-    "bottom": { "required": ["bottom"], "optional": ["top", "shoes"] },
-    "shoes": { "required": ["shoes"], "optional": [] },
-    "outerwear": { "required": ["outerwear"], "optional": ["top", "bottom", "shoes"] },
+    "dress": { "required": ["dress"], "optional": ["footwear", "bag", "accessory"] },
+    "top": { "required": ["top"], "optional": ["bottom", "footwear", "accessory"] },
+    "bottom": { "required": ["bottom"], "optional": ["top", "footwear"] },
+    "footwear": { "required": ["footwear"], "optional": [] },
+    "outerwear": { "required": ["outerwear"], "optional": ["top", "bottom", "footwear"] },
     "bag": { "required": ["bag"], "optional": [] },
     "accessory": { "required": ["accessory"], "optional": [] }
   },
-  "styles_requiring_shoes": ["formal", "semi_formal", "elegant"]
+  "styles_requiring_footwear": ["formal", "semi_formal", "elegant"]
 }

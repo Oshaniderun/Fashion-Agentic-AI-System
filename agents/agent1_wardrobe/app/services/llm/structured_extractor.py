@@ -5,7 +5,7 @@ Validates LLM output using Pydantic, repairs malformed JSON, and normalizes syno
 
 import json
 import re
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 import httpx
 
 from app.core.config import settings
@@ -16,7 +16,6 @@ from app.services.nlp.normalization import (
     normalize_styles,
     extract_color_preferences_and_exclusions,
     extract_budget,
-    extract_requested_garments,
     extract_pattern_preferences,
 )
 from shared.schemas.agent1_schemas import UserRequirements
@@ -33,6 +32,14 @@ You must return ONLY valid JSON matching this exact schema:
     "budget": float or null,
     "requested_categories": list of strings,
     "requested_types": list of strings,
+    "identified_items": [
+        {
+            "category": string,
+            "type": string or null,
+            "colour": string or null,
+            "role": "existing_reference" or "requested"
+        }
+    ],
     "pattern_preferences": list of strings,
     "additional_preferences": list of strings
 }
@@ -41,8 +48,8 @@ RULES:
 2. If occasion is not mentioned, set "occasion": null. Do NOT hallucinate.
 3. If budget is not mentioned, set "budget": null. Do NOT invent numbers.
 4. Normalize synonyms (e.g. "not too formal" -> "semi_formal", "engagement party" -> "engagement", "frock" -> category "dress", "checked/checkered/gingham" -> pattern "checked").
-5. If the user asks for a specific garment (frock, dress, jeans, shoes), put the category in requested_categories (dress/top/bottom/shoes/bag/accessory/outerwear) and the word in requested_types.
-6. Do NOT invent a full outfit of top+bottom+shoes when the user only asked for one garment.
+5. If the user asks for a specific garment (frock, dress, jeans, shoes), put the category in requested_categories (dress/top/bottom/shoes/bag/accessory/outerwear) and the word in requested_types. Only do this for items the user WANTS to buy/find, not items they already have.
+6. Crucially, fill the `identified_items` array. Determine if an item is "existing_reference" (user has it) or "requested" (user wants it). Assign item-specific colours to the `colour` field of that item, NOT the global `colour_preferences`.
 7. Return JSON ONLY without explanatory text.
 """
 
@@ -66,8 +73,13 @@ class StructuredRequirementExtractor(BaseLLMProvider):
         local_styles = normalize_styles(sanitized_text)
         local_colors, local_exclusions = extract_color_preferences_and_exclusions(sanitized_text)
         local_budget = extract_budget(sanitized_text)
-        local_cats, local_types = extract_requested_garments(sanitized_text)
         local_patterns = extract_pattern_preferences(sanitized_text)
+        
+        from app.services.nlp.normalization import extract_items_with_roles
+        local_items = extract_items_with_roles(sanitized_text)
+        
+        local_cats = list(dict.fromkeys(item["category"] for item in local_items if item.get("role") == "requested"))
+        local_types = list(dict.fromkeys(item["type"] for item in local_items if item.get("role") == "requested" and item.get("type")))
 
         # If LLM provider is configured and API key is present, attempt LLM call
         if self.provider in ["anthropic", "openai", "gemini", "google"] and self.api_key:
@@ -84,11 +96,16 @@ class StructuredRequirementExtractor(BaseLLMProvider):
                         local_cats,
                         local_types,
                         local_patterns,
+                        local_items,
                     )
             except Exception as e:
                 logger.warning(f"LLM extraction failed, safely falling back to deterministic NLP: {e}")
 
         default_style = local_styles if local_styles else (["casual"] if not local_cats else [])
+        
+        from shared.schemas.agent1_schemas import RequestedItem
+        requested_items_objs = [RequestedItem(**it) for it in local_items]
+        
         return UserRequirements(
             occasion=local_occasion,
             style=default_style,
@@ -97,6 +114,7 @@ class StructuredRequirementExtractor(BaseLLMProvider):
             budget=local_budget,
             requested_categories=local_cats,
             requested_types=local_types,
+            identified_items=requested_items_objs,
             pattern_preferences=local_patterns,
             additional_preferences=[]
         )
@@ -206,6 +224,7 @@ class StructuredRequirementExtractor(BaseLLMProvider):
         local_cats: list,
         local_types: list,
         local_patterns: list,
+        local_items: list,
     ) -> UserRequirements:
         """Validates LLM data against Pydantic schema and ensures no hallucinations."""
         budget = llm_data.get("budget")
@@ -258,6 +277,19 @@ class StructuredRequirementExtractor(BaseLLMProvider):
         patterns = list(dict.fromkeys(
             local_patterns + [p.lower().replace(" ", "_").replace("-", "_") for p in llm_patterns if p]
         ))
+        
+        from shared.schemas.agent1_schemas import RequestedItem
+        llm_items = llm_data.get("identified_items", [])
+        if not isinstance(llm_items, list):
+            llm_items = []
+            
+        merged_items_objs: List[RequestedItem] = []
+        if llm_items:
+            for it in llm_items:
+                if isinstance(it, dict) and "category" in it and "role" in it:
+                    merged_items_objs.append(RequestedItem(**it))
+        else:
+            merged_items_objs = [RequestedItem(**it) for it in local_items]
 
         if not styles and not cats:
             styles = ["casual"]
@@ -270,6 +302,7 @@ class StructuredRequirementExtractor(BaseLLMProvider):
             budget=budget,
             requested_categories=cats,
             requested_types=types,
+            identified_items=merged_items_objs,
             pattern_preferences=patterns,
             additional_preferences=llm_data.get("additional_preferences", []) or []
         )

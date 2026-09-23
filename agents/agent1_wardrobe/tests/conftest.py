@@ -56,7 +56,7 @@ def init_test_db():
     items = [
         WardrobeItem(wardrobe_code="W001", user_id=demo_u.id, image_path="uploads/seed1.png", category="top", type="blouse", colour="black", style="smart_casual", formality=0.70, confidence=0.92, attributes_confirmed=True),
         WardrobeItem(wardrobe_code="W002", user_id=demo_u.id, image_path="uploads/seed2.png", category="bottom", type="jeans", colour="blue", style="casual", formality=0.40, confidence=0.95, attributes_confirmed=True),
-        WardrobeItem(wardrobe_code="W003", user_id=demo_u.id, image_path="uploads/seed3.png", category="shoes", type="loafers", colour="beige", style="smart_casual", formality=0.65, confidence=0.89, attributes_confirmed=True),
+        WardrobeItem(wardrobe_code="W003", user_id=demo_u.id, image_path="uploads/seed3.png", category="footwear", type="loafers", colour="beige", style="smart_casual", formality=0.65, confidence=0.89, attributes_confirmed=True),
     ]
     db.add_all(items)
     db.commit()

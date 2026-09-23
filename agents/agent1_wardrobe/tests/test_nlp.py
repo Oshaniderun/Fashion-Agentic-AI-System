@@ -62,7 +62,11 @@ def test_uncertainty_preservation_no_hallucinations():
     reqs, _, _ = fashion_requirement_service.process_request(p)
     assert reqs.occasion is None
     assert reqs.budget is None
-    assert "dark" in reqs.colour_preferences
+    # "dark" should be bound to the jacket item, not a global preference
+    assert reqs.colour_preferences == []
+    assert len(reqs.identified_items) > 0
+    assert reqs.identified_items[0].colour == "dark"
+    assert reqs.identified_items[0].type == "jacket"
 
 
 def test_synonym_normalization():
@@ -100,3 +104,73 @@ def test_checked_frock_extracts_pattern_in_handoff():
     assert "checked" in (handoff.query_text or "").lower()
     assert "frock" in (handoff.query_text or "").lower() or "dress" in (handoff.query_text or "").lower()
     assert full.search_requirements.categories == handoff.categories
+
+
+def test_item_role_black_heel_exclusion():
+    """
+    User requests a blouse and pant, and mentions a 'black heel'.
+    If the wardrobe already has a black heel, the Agent 2 query should NOT contain 'black' or 'heel'.
+    """
+    from app.services.outfit_requirements import outfit_requirement_engine
+    from app.services.missing_items import missing_item_detector
+    from shared.schemas.agent1_schemas import WardrobeSummaryItem
+
+    prompt = "I need something formal for an interview like a blouse and a bottom pant with a black heel"
+    reqs, _, _ = fashion_requirement_service.process_request(prompt)
+
+    # NLP should correctly associate 'black' to 'heel', not globally
+    assert "black" not in reqs.colour_preferences
+    assert any(it.colour == "black" and it.type == "heel" for it in reqs.identified_items)
+
+    # Provide the wardrobe with black heels
+    owned_items = [
+        WardrobeSummaryItem(
+            wardrobe_id="W007", category="footwear", type="heels", colour="black", pattern="solid", style="formal"
+        ),
+        WardrobeSummaryItem(
+            wardrobe_id="W003", category="top", type="blouse", colour="red", pattern="solid", style="formal"
+        )
+    ]
+    
+    required, optional = outfit_requirement_engine.determine_requirements(reqs)
+    _, handoff, _ = missing_item_detector.analyze_missing(
+        required_categories=required,
+        optional_categories=optional,
+        owned_items=owned_items,
+        user_requirements=reqs,
+    )
+    
+    query = (handoff.query_text or "").lower()
+    assert "pant" in query
+    # "heel" and "black" belong to the owned item, not the missing one
+    assert "heel" not in query
+    assert "black" not in query
+
+
+def test_item_role_ownership_context():
+    """
+    User says: 'I have blue jeans and a white shirt, I need a matching jacket'
+    Jeans and shirt should be 'existing', jacket should be 'requested'.
+    """
+    prompt = "I have blue jeans and a white shirt, I need a matching jacket"
+    reqs, _, _ = fashion_requirement_service.process_request(prompt)
+    
+    jeans = next((it for it in reqs.identified_items if it.type == "jeans"), None)
+    shirt = next((it for it in reqs.identified_items if it.type == "shirt"), None)
+    jacket = next((it for it in reqs.identified_items if it.type == "jacket"), None)
+    
+    assert jeans is not None and jeans.role == "existing_reference" and jeans.colour == "blue"
+    assert shirt is not None and shirt.role == "existing_reference" and shirt.colour == "white"
+    assert jacket is not None and jacket.role == "requested"
+
+
+def test_item_role_backward_compatibility():
+    """Simple requests with no ownership context default to 'requested'."""
+    prompt = "I need a blue blouse and formal pant"
+    reqs, _, _ = fashion_requirement_service.process_request(prompt)
+    
+    blouse = next((it for it in reqs.identified_items if it.type == "blouse"), None)
+    pant = next((it for it in reqs.identified_items if it.type == "pant"), None)
+    
+    assert blouse is not None and blouse.role == "requested" and blouse.colour == "blue"
+    assert pant is not None and pant.role == "requested"
