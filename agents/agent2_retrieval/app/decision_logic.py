@@ -98,15 +98,14 @@ def _run_retrieval(
     relax_style: bool,
     price_ceiling: float,
 ) -> List[ProductResult]:
-    """
-    TODO (Stage 3): replace with the real hybrid BM25 + Sentence-Transformers
-    retrieval over the product dataset (agents/agent2_retrieval/data/), always
-    hard-filtered by request.required_category and price_ceiling, with colour
-    and style used as hard filters unless the corresponding relax_* flag is set
-    (in which case fold them into the semantic ranking instead of filtering).
-    Must also exclude request.excluded_product_ids.
-    """
-    raise NotImplementedError("Wire up the retrieval engine here in Stage 3")
+    from app.services.retrieval_service import get_retrieval_service
+    service = get_retrieval_service()
+    return service.search(
+        request=request,
+        relax_colour=relax_colour,
+        relax_style=relax_style,
+        price_ceiling=price_ceiling,
+    )
 
 
 def _build_response(

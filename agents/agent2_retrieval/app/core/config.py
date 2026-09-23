@@ -1,7 +1,9 @@
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from functools import lru_cache
 
 class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
     PROJECT_NAME: str = "FASHORA Agent 2 - Fashion Retrieval"
     VERSION: str = "1.0.0"
     API_V1_STR: str = "/api/v1"
@@ -34,10 +36,6 @@ class Settings(BaseSettings):
         if self.DATABASE_URL:
             return self.DATABASE_URL
         return f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
-
-    class Config:
-        env_file = ".env"
-        extra = "ignore"
 
 @lru_cache()
 def get_settings():

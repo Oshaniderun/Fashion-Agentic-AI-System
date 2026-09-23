@@ -39,3 +39,6 @@ logs/
 # Data (keep small sample data tracked; ignore large/generated exports)
 agents/agent2_retrieval/data/*.large.csv
 agents/agent2_retrieval/data/exports/
+*.db
+agents/agent2_retrieval/data/raw/
+agents/agent2_retrieval/data/processed/
