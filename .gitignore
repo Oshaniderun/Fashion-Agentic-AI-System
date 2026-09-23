@@ -9,6 +9,7 @@ __pycache__/
 venv/
 .venv/
 *.sqlite3
+*.db
 
 # Vector DB / embeddings cache
 chroma_db/

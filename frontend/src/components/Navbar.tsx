@@ -3,9 +3,6 @@ import {
   Shirt,
   PlusCircle,
   Sparkles,
-  Activity,
-  Settings,
-  Shield,
   Menu,
   LogOut,
 } from 'lucide-react';
@@ -18,9 +15,6 @@ const LINKS = [
   { to: '/request', label: 'Fashion Request', icon: Sparkles },
   { to: '/wardrobe', label: 'Wardrobe', icon: Shirt },
   { to: '/wardrobe/add', label: 'Add Clothing', icon: PlusCircle },
-  { to: '/agent', label: 'Agent Status', icon: Activity },
-  { to: '/security', label: 'Security Lab', icon: Shield },
-  { to: '/settings', label: 'Settings', icon: Settings },
 ];
 
 interface Props {
