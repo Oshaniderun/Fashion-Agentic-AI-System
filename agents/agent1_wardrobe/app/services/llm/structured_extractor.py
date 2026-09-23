@@ -48,7 +48,7 @@ RULES:
 2. If occasion is not mentioned, set "occasion": null. Do NOT hallucinate.
 3. If budget is not mentioned, set "budget": null. Do NOT invent numbers.
 4. Normalize synonyms (e.g. "not too formal" -> "semi_formal", "engagement party" -> "engagement", "frock" -> category "dress", "checked/checkered/gingham" -> pattern "checked").
-5. If the user asks for a specific garment (frock, dress, jeans, shoes), put the category in requested_categories (dress/top/bottom/shoes/bag/accessory/outerwear) and the word in requested_types. Only do this for items the user WANTS to buy/find, not items they already have.
+5. If the user asks for a specific garment (frock, dress, jeans, footwear), put the category in requested_categories (dress/top/bottom/footwear/bag/accessory/outerwear) and the word in requested_types. Only do this for items the user WANTS to buy/find, not items they already have.
 6. Crucially, fill the `identified_items` array. Determine if an item is "existing_reference" (user has it) or "requested" (user wants it). Assign item-specific colours to the `colour` field of that item, NOT the global `colour_preferences`.
 7. Return JSON ONLY without explanatory text.
 """

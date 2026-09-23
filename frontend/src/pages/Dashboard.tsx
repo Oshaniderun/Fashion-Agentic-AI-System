@@ -65,12 +65,12 @@ export function Dashboard() {
         </div>
         <div className="stat">
           <div className="label">Footwear</div>
-          <div className="value">{countBy(items, (i) => i.category === 'shoes')}</div>
+          <div className="value">{countBy(items, (i) => i.category === 'footwear')}</div>
         </div>
         <div className="stat">
           <div className="label">Other</div>
           <div className="value">
-            {countBy(items, (i) => !['top', 'bottom', 'shoes'].includes(i.category))}
+            {countBy(items, (i) => !['top', 'bottom', 'footwear'].includes(i.category))}
           </div>
         </div>
       </div>

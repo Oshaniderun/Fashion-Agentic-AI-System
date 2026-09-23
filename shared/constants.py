@@ -13,7 +13,7 @@ class ProductCategory(str, Enum):
     BOTTOM = "bottom"
     DRESS = "dress"
     OUTERWEAR = "outerwear"
-    SHOES = "shoes"
+    SHOES = "footwear"
     BAG = "bag"
     JEWELRY = "jewelry"
     ACCESSORY = "accessory"

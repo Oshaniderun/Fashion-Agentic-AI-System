@@ -101,7 +101,7 @@ def create_wardrobe_item(
 
 @router.get("", response_model=List[WardrobeItemResponse])
 def list_wardrobe_items(
-    category: Optional[str] = Query(None, description="Filter by category (top, bottom, shoes, etc.)"),
+    category: Optional[str] = Query(None, description="Filter by category (top, bottom, footwear, etc.)"),
     colour: Optional[str] = Query(None, description="Filter by color"),
     style: Optional[str] = Query(None, description="Filter by style"),
     pattern: Optional[str] = Query(None, description="Filter by pattern"),

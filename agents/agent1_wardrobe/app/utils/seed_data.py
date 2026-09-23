@@ -58,9 +58,13 @@ def seed_database_if_empty(db: Session) -> User:
         db.refresh(demo_user)
         logger.info(f"Created default demo user: {DEMO_USER_EMAIL}")
         
-    # Check if wardrobe items exist for demo user
-    existing_items = db.query(WardrobeItem).filter(WardrobeItem.user_id == demo_user.id).count()
-    if existing_items == 0:
+    # Check if seed wardrobe items already exist for demo user (by wardrobe_code)
+    seed_codes = {"W001", "W002", "W003", "W004", "W005"}
+    existing_seed = db.query(WardrobeItem).filter(
+        WardrobeItem.user_id == demo_user.id,
+        WardrobeItem.wardrobe_code.in_(seed_codes),
+    ).count()
+    if existing_seed == 0:
         seed_items = [
             {
                 "wardrobe_code": "W001",
@@ -98,7 +102,7 @@ def seed_database_if_empty(db: Session) -> User:
             },
             {
                 "wardrobe_code": "W003",
-                "category": "shoes",
+                "category": "footwear",
                 "type": "loafers",
                 "colour": "beige",
                 "secondary_colour": "brown",

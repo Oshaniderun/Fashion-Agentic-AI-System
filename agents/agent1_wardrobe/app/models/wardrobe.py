@@ -23,7 +23,7 @@ class WardrobeItem(Base):
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
 
     image_path = Column(String(500), nullable=False)           # relative path, e.g. uploads/abc.jpg
-    category = Column(String(50), nullable=False, index=True)  # top, bottom, shoes, etc.
+    category = Column(String(50), nullable=False, index=True)  # top, bottom, footwear, etc.
     type = Column(String(50), nullable=False)                  # blouse, jeans, loafers, etc.
     colour = Column(String(50), nullable=False, index=True)    # black, blue, beige, etc.
     secondary_colour = Column(String(50), nullable=True)

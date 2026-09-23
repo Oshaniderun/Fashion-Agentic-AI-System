@@ -23,7 +23,7 @@ from shared.constants import (  # noqa: F401 — kept for schema consumers / doc
 
 class RequestedItem(BaseModel):
     """Represents a single clothing item mentioned in the user's request with its role."""
-    category: str = Field(..., description="Normalized category (top, bottom, shoes, dress, bag, accessory, outerwear).")
+    category: str = Field(..., description="Normalized category (top, bottom, footwear, dress, bag, accessory, outerwear).")
     type: Optional[str] = Field(None, description="Specific garment type (blouse, jeans, heel). None if only category known.")
     colour: Optional[str] = Field(None, description="Item-specific colour if stated (e.g. 'black' in 'black heel'). None if no colour modifier.")
     role: str = Field("requested", description="'existing_reference' = user says they own it, 'requested' = user wants it.")
@@ -72,7 +72,7 @@ class UserRequirements(BaseModel):
 
 class WardrobeSummaryItem(BaseModel):
     wardrobe_id: str = Field(..., description="Unique identifier for the item (e.g. 'W001').")
-    category: str = Field(..., description="Category, e.g. 'top', 'bottom', 'shoes'.")
+    category: str = Field(..., description="Category, e.g. 'top', 'bottom', 'footwear'.")
     type: str = Field(..., description="Specific garment type, e.g. 'blouse', 'jeans', 'loafer'.")
     colour: str = Field(..., description="Primary detected or user-confirmed color.")
     secondary_colour: Optional[str] = Field(None, description="Secondary color if detected.")

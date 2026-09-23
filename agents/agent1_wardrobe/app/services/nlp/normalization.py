@@ -164,7 +164,7 @@ def extract_budget(text: str) -> Optional[float]:
 
 # Category labels must NOT appear in the types list — they are too generic for product search
 _CATEGORY_LABEL_WORDS = {
-    "top", "bottom", "dress", "shoes", "footwear",
+    "top", "bottom", "dress", "footwear", "footwear",
     "bag", "accessory", "accessories", "outerwear",
 }
 
@@ -173,7 +173,7 @@ def extract_requested_garments(text: str) -> Tuple[List[str], List[str]]:
     """
     Detects explicitly requested garment types/categories from text.
     Returns (categories, types) where:
-      - categories: standardized category labels (top, bottom, dress, shoes, ...)
+      - categories: standardized category labels (top, bottom, dress, footwear, ...)
       - types: specific garment words useful for product search (blouse, jeans, loafers, ...)
                NEVER contains bare category labels like 'bottom' or 'top'
     Example: "a blouse and bottom pant" -> categories=["top", "bottom"], types=["blouse", "pants"]
@@ -347,7 +347,7 @@ def extract_items_with_roles(text: str) -> List[Dict[str, Any]]:
 
     Returns list of dicts:
     [
-        {"category": "shoes", "type": "heel", "colour": "black", "role": "requested"},
+        {"category": "footwear", "type": "heel", "colour": "black", "role": "requested"},
         {"category": "top", "type": "blouse", "colour": null, "role": "existing_reference"},
         ...
     ]

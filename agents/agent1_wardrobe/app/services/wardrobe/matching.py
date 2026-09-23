@@ -43,13 +43,20 @@ class WardrobeMatcher:
         for cat in required_categories:
             cat_lower = cat.lower()
             candidates = by_cat.get(cat_lower, [])
-            if not candidates and cat_lower in ["shoes", "footwear"]:
-                candidates = by_cat.get("shoes", []) or by_cat.get("footwear", [])
+            if not candidates and cat_lower in ["footwear", "footwear"]:
+                candidates = by_cat.get("footwear", []) or by_cat.get("footwear", [])
 
             if candidates:
                 # Rank candidates by score
                 best_item = max(candidates, key=lambda it: self._score_item(it, requirements))
-                selected_candidates.append(best_item)
+                
+                # Overwrite confidence with the match score so the frontend shows how well it matched
+                match_score = self._score_item(best_item, requirements)
+                # Create a copy so we don't mutate the original item which might be used elsewhere
+                best_item_copy = best_item.model_copy()
+                best_item_copy.confidence = match_score
+                
+                selected_candidates.append(best_item_copy)
 
         return selected_candidates
 

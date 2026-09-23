@@ -91,21 +91,12 @@ class MissingItemDetector:
         available: List[str] = []
         missing: List[str] = []
 
-        # Only check against actual owned_categories (database items)
         for req_cat in required_categories:
             cat_lower = req_cat.lower()
-                
-            if cat_lower in ["footwear"]:
-                if "footwear" in owned_categories:
-                    available.append(req_cat)
-                else:
-                    missing.append(req_cat)
+            if cat_lower in owned_categories:
+                available.append(req_cat)
             else:
-                if cat_lower in owned_categories:
-                    available.append(req_cat)
-                else:
-                    missing.append(req_cat)
-                    
+                missing.append(req_cat)
         outfit_reqs = OutfitRequirements(
             required_categories=required_categories,
             available_categories=available,

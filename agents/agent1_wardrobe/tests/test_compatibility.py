@@ -9,7 +9,7 @@ from shared.schemas.agent1_schemas import UserRequirements, WardrobeSummaryItem
 def test_black_blouse_blue_jeans_beige_loafers_compatibility():
     """
     Demonstrates Section 18 scenario:
-    Black blouse (top, 0.70) + Blue jeans (bottom, 0.40) + Beige loafers (shoes, 0.65)
+    Black blouse (top, 0.70) + Blue jeans (bottom, 0.40) + Beige loafers (footwear, 0.65)
     Should evaluate to smart_casual, good color compatibility, moderate/high occasion suitability.
     """
     items = [

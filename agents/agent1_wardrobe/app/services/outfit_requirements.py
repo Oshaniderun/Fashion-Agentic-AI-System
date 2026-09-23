@@ -59,7 +59,7 @@ class OutfitRequirementEngine:
 
         occasion = (user_reqs.occasion or "").lower()
         by_occasion = rules.get("by_occasion", {})
-        default = rules.get("default_full_outfit", {"required": ["top", "bottom", "shoes"], "optional": []})
+        default = rules.get("default_full_outfit", {"required": ["top", "bottom", "footwear"], "optional": []})
 
         if occasion and occasion in by_occasion:
             rule = by_occasion[occasion]
@@ -72,10 +72,10 @@ class OutfitRequirementEngine:
         required = list(rule.get("required", []))
         optional = list(rule.get("optional", []))
 
-        shoe_styles = rules.get("styles_requiring_shoes", [])
+        shoe_styles = rules.get("styles_requiring_footwear", [])
         if any(s in shoe_styles for s in user_reqs.style):
-            if "shoes" not in required:
-                required.append("shoes")
+            if "footwear" not in required:
+                required.append("footwear")
 
         return required, optional
 

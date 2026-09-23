@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom';
 import type { WardrobeItem } from '../types';
 import { imageUrl } from '../services/api';
-import { ConfidenceBadge } from './ConfidenceBadge';
 
 interface Props {
   item: WardrobeItem;

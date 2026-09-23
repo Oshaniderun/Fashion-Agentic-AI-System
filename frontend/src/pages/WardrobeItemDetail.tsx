@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ClothingAttributeEditor } from '../components/ClothingAttributeEditor';
-import { ConfidenceBadge } from '../components/ConfidenceBadge';
 import { ErrorAlert } from '../components/ErrorAlert';
 import { LoadingSkeleton } from '../components/LoadingSkeleton';
 import {
@@ -96,7 +95,6 @@ export function WardrobeItemDetail() {
             {item.attributes_confirmed ? 'User-confirmed attributes' : 'AI-detected only'}
           </p>
         </div>
-        <ConfidenceBadge value={item.confidence} />
       </div>
 
       <ErrorAlert message={error} />

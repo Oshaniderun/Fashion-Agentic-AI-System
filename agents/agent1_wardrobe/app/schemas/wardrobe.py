@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 
 
 class ClothingAttributesDetected(BaseModel):
-    category: str = Field(..., description="Detected category, e.g. 'top', 'bottom', 'shoes'.")
+    category: str = Field(..., description="Detected category, e.g. 'top', 'bottom', 'footwear'.")
     type: str = Field(..., description="Garment type, e.g. 'blouse', 'jeans', 'loafers'.")
     colour: str = Field(..., description="Primary detected color.")
     secondary_colour: Optional[str] = None

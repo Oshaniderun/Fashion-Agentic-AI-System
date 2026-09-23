@@ -2,7 +2,7 @@
 Gemini Vision Clothing Analyzer.
 
 Uses the configured Gemini multimodal LLM to accurately identify:
-  - Category (top, bottom, shoes, outerwear, dress, bag, accessory)
+  - Category (top, bottom, footwear, outerwear, dress, bag, accessory)
   - Specific garment type (blouse, jeans, loafers, sandals, etc.)
   - Dominant colour + secondary colour
   - Pattern (solid, striped, floral, checked, etc.)
@@ -29,12 +29,12 @@ from app.schemas.wardrobe import ClothingAttributesDetected
 
 
 # ── Valid values (matches ontology + DB) ──────────────────────────────────────
-_VALID_CATEGORIES = {"top", "bottom", "shoes", "outerwear", "dress", "bag", "accessory"}
+_VALID_CATEGORIES = {"top", "bottom", "footwear", "outerwear", "dress", "bag", "accessory"}
 
 _VALID_TYPES: Dict[str, list[str]] = {
     "top": ["blouse", "shirt", "t-shirt", "sweater", "tank_top", "crop_top", "hoodie", "kurta"],
     "bottom": ["jeans", "trousers", "skirt", "shorts", "leggings", "palazzo", "chinos"],
-    "shoes": ["loafers", "sneakers", "boots", "heels", "sandals", "slippers", "flats", "formal_shoes"],
+    "footwear": ["loafers", "sneakers", "boots", "heels", "sandals", "slippers", "flats", "formal_shoes"],
     "outerwear": ["blazer", "jacket", "coat", "cardigan", "trench_coat"],
     "dress": ["midi_dress", "maxi_dress", "cocktail_dress", "frock", "jumpsuit", "romper", "mini_dress"],
     "bag": ["handbag", "tote_bag", "clutch", "backpack", "purse"],
@@ -52,7 +52,7 @@ _GEMINI_PROMPT = """\
 You are a clothing classification expert. Analyze this clothing/accessory image and return ONLY a valid JSON object.
 
 Rules:
-- category MUST be one of: top, bottom, shoes, outerwear, dress, bag, accessory
+- category MUST be one of: top, bottom, footwear, outerwear, dress, bag, accessory
 - type MUST be the most specific garment name you can identify
 - colour MUST be the single dominant colour (e.g. "black", "red", "beige", "navy")
 - secondary_colour is the second most prominent colour, or null if essentially one colour
@@ -61,7 +61,7 @@ Rules:
 - style MUST be one of: casual, smart_casual, semi_formal, formal, elegant, streetwear, minimalist
 - confidence is your confidence 0.0 to 1.0
 - Do NOT make assumptions about who wears it. Focus only on visible attributes.
-- If it's clearly footwear, category MUST be "shoes". If it's clearly a bag/purse, category MUST be "bag".
+- If it's clearly footwear, category MUST be "footwear". If it's clearly a bag/purse, category MUST be "bag".
 
 Return ONLY this JSON, no markdown, no explanation:
 {
