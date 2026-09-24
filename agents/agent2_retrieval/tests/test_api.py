@@ -308,10 +308,10 @@ def test_unknown_fields_safely_ignored():
 def test_product_detail_endpoint_success():
     headers = {"X-Service-Token": settings.SERVICE_TOKEN}
     # Query known existing product in database
-    response = client.get("/api/v1/products/B08N5LNQCX", headers=headers)
+    response = client.get("/api/v1/products/B0811M2JG9", headers=headers)
     assert response.status_code == 200
     data = response.json()
-    assert data["product_id"] == "B08N5LNQCX"
+    assert data["product_id"] == "B0811M2JG9"
     assert "product_name" in data
 
 def test_product_detail_404():
@@ -321,5 +321,5 @@ def test_product_detail_404():
     assert "not found" in response.text.lower()
 
 def test_product_detail_requires_authentication():
-    response = client.get("/api/v1/products/B08N5LNQCX")
+    response = client.get("/api/v1/products/B0811M2JG9")
     assert response.status_code == 401

@@ -57,6 +57,9 @@ class RetrievalService:
         # If DB is empty, fall back to cleaned JSON
         if not self.products:
             json_path = Path(self.settings.DATASET_PATH)
+            if not json_path.exists():
+                agent_dir = Path(__file__).resolve().parent.parent.parent
+                json_path = (agent_dir / self.settings.DATASET_PATH).resolve()
             if json_path.exists():
                 with open(json_path, "r", encoding="utf-8") as f:
                     items = json.load(f)
@@ -75,6 +78,8 @@ class RetrievalService:
             self.reload_catalog()
 
         req_cat_value = request.required_category.value if hasattr(request.required_category, "value") else str(request.required_category)
+        # Normalize category taxonomy alias: "footwear" enum value maps to "shoes" in dataset/indexes
+        search_category = "shoes" if req_cat_value == "footwear" else req_cat_value
         excluded_ids = set(request.excluded_product_ids or [])
 
         # Construct search query string
@@ -93,7 +98,7 @@ class RetrievalService:
         bm25_results = self.bm25_service.search(
             query=query_str,
             top_k=50,
-            category=req_cat_value,
+            category=search_category,
             max_price=price_ceiling,
             excluded_ids=list(excluded_ids)
         )
@@ -104,7 +109,7 @@ class RetrievalService:
         chroma_results = self.chroma_service.search_similar(
             query_embedding=q_emb,
             top_k=50,
-            where_filter={"category": req_cat_value}
+            where_filter={"category": search_category}
         )
         dense_map = {r["product_id"]: float(r["similarity"]) for r in chroma_results}
 
@@ -129,7 +134,8 @@ class RetrievalService:
                 continue
 
             # Category is strictly enforced (never relaxed)
-            if prod.get("category") != req_cat_value:
+            prod_cat = prod.get("category")
+            if prod_cat != req_cat_value and prod_cat != search_category:
                 continue
 
             # Price ceiling enforced (missing prices are preserved as None, not converted to 0.0)
@@ -145,7 +151,7 @@ class RetrievalService:
                 continue
 
             # Hard colour constraint (unless relaxed)
-            prod_colour = prod.get("colour", "")
+            prod_colour = prod.get("colour") or "Unknown"
             if not relax_colour and request.preferred_colour:
                 req_col = request.preferred_colour.strip().lower()
                 p_col = (prod_colour or "").strip().lower()
@@ -153,7 +159,7 @@ class RetrievalService:
                     continue
 
             # Hard style constraint (unless relaxed)
-            prod_style = prod.get("style", "")
+            prod_style = prod.get("style") or ""
             if not relax_style and request.style:
                 req_sty = request.style.strip().lower()
                 p_sty = (prod_style or "").strip().lower()
@@ -192,7 +198,7 @@ class RetrievalService:
                 name=prod.get("product_name", "Unknown Product"),
                 category=cat_enum,
                 colour=prod_colour,
-                price=price if price is not None else 0.0,
+                price=price,
                 store=prod.get("store", "Amazon Fashion"),
                 url=valid_url,
                 availability=is_avail,

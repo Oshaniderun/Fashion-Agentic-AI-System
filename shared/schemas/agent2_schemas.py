@@ -97,8 +97,8 @@ class ProductResult(BaseModel):
     product_id: str
     name: str
     category: ProductCategory
-    colour: str
-    price: float
+    colour: Optional[str] = "Unknown"
+    price: Optional[float] = None
     store: str
     url: Optional[HttpUrl] = None
     availability: bool
