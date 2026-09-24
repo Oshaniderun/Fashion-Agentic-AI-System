@@ -306,3 +306,180 @@ def test_cors_headers_response():
     assert response.headers.get("access-control-allow-origin") == "http://localhost:3000"
     assert response.headers.get("access-control-allow-credentials") == "true"
 
+
+# Phase 5.4 — Security Hardening Tests
+
+def test_security_auth_malformed_headers():
+    """Verify malformed Authorization headers and unsupported schemes return 401."""
+    # Single token part
+    r1 = client.post(
+        "/retrieve-products",
+        json={"request_id": "r", "required_category": ProductCategory.SHOES.value, "max_price": 100.0},
+        headers={"Authorization": "Bearer"}
+    )
+    assert r1.status_code == 401
+
+    # Extra parts
+    r2 = client.post(
+        "/retrieve-products",
+        json={"request_id": "r", "required_category": ProductCategory.SHOES.value, "max_price": 100.0},
+        headers={"Authorization": "Bearer extra token parts"}
+    )
+    assert r2.status_code == 401
+
+    # Wrong scheme
+    r3 = client.post(
+        "/retrieve-products",
+        json={"request_id": "r", "required_category": ProductCategory.SHOES.value, "max_price": 100.0},
+        headers={"Authorization": "Basic dXNlcjpwYXNz"}
+    )
+    assert r3.status_code == 401
+
+
+def test_security_auth_empty_service_token():
+    """Verify empty service token header is rejected with 401."""
+    response = client.post(
+        "/retrieve-products",
+        json={"request_id": "r", "required_category": ProductCategory.SHOES.value, "max_price": 100.0},
+        headers={"X-Service-Token": ""}
+    )
+    assert response.status_code == 401
+
+
+def test_security_auth_arbitrary_token():
+    """Verify arbitrary string masquerading as JWT returns 401."""
+    response = client.post(
+        "/retrieve-products",
+        json={"request_id": "r", "required_category": ProductCategory.SHOES.value, "max_price": 100.0},
+        headers={"Authorization": "Bearer definitely_not_a_valid_jwt"}
+    )
+    assert response.status_code == 401
+
+
+def test_security_auth_valid_jwt_and_bearer_service_token():
+    """Verify valid JWT and valid Bearer service token are permitted."""
+    valid_jwt = create_access_token({"sub": "user_verified_123"})
+    r_jwt = client.post(
+        "/retrieve-products",
+        json={"request_id": "r_jwt", "required_category": ProductCategory.SHOES.value, "max_price": 5000.0},
+        headers={"Authorization": f"Bearer {valid_jwt}"}
+    )
+    assert r_jwt.status_code == 200
+
+    r_bearer_service = client.post(
+        "/retrieve-products",
+        json={"request_id": "r_svc", "required_category": ProductCategory.SHOES.value, "max_price": 5000.0},
+        headers={"Authorization": f"Bearer {settings.SERVICE_TOKEN}"}
+    )
+    assert r_bearer_service.status_code == 200
+
+
+def test_security_anonymous_access_blocked_on_all_protected_routes():
+    """Verify all protected endpoints reject anonymous requests with 401."""
+    search_payload = {"request_id": "r_anon", "required_category": ProductCategory.SHOES.value, "max_price": 100.0}
+
+    # /retrieve-products
+    assert client.post("/retrieve-products", json=search_payload).status_code == 401
+
+    # /api/v1/retrieval/search
+    assert client.post("/api/v1/retrieval/search", json=search_payload).status_code == 401
+
+    # /api/v1/search
+    assert client.post("/api/v1/search", json=search_payload).status_code == 401
+
+    # /api/v1/products/{product_id}
+    assert client.get("/api/v1/products/P12345").status_code == 401
+
+
+def test_security_sql_injection_product_detail():
+    """Verify malicious SQL payloads in product_id path return 404 cleanly without SQL errors."""
+    sql_payloads = [
+        "' OR '1'='1",
+        "1' OR '1'='1",
+        "'; DROP TABLE products; --",
+        "1; SELECT * FROM products;"
+    ]
+    for payload in sql_payloads:
+        response = client.get(f"/api/v1/products/{payload}", headers=AUTH_HEADERS)
+        assert response.status_code == 404
+        body = response.text.lower()
+        assert "syntax error" not in body
+        assert "traceback" not in body
+        assert "sqlite" not in body
+        assert "postgresql" not in body
+
+
+def test_security_xss_in_all_fields_and_content_type():
+    """Verify XSS strings across all filter fields are treated as passive data with JSON content type."""
+    payload = {
+        "request_id": "sec_xss_full",
+        "required_category": ProductCategory.SHOES.value,
+        "query_text": "<script>alert('xss')</script>",
+        "preferred_colour": "<script>alert(1)</script>",
+        "style": "javascript:alert(1)",
+        "occasion": "<img src=x onerror=alert(1)>",
+        "max_price": 5000.0,
+        "top_k": 5
+    }
+    response = client.post("/retrieve-products", json=payload, headers=AUTH_HEADERS)
+    assert response.status_code == 200
+    assert response.headers.get("content-type", "").startswith("application/json")
+    data = response.json()
+    assert isinstance(data["results"], list)
+
+
+def test_security_excessive_excluded_product_ids():
+    """Verify excluded_product_ids enforces list length limit (100) and element length limit (100)."""
+    # Exceeds max count of 100
+    oversized_list_payload = {
+        "request_id": "sec_dos_ex_ids",
+        "required_category": ProductCategory.SHOES.value,
+        "max_price": 5000.0,
+        "excluded_product_ids": [f"ID_{i}" for i in range(101)]
+    }
+    r1 = client.post("/retrieve-products", json=oversized_list_payload, headers=AUTH_HEADERS)
+    assert r1.status_code == 400
+    assert "limit of 100 items" in r1.text
+
+    # Exceeds max element length of 100
+    oversized_item_payload = {
+        "request_id": "sec_dos_ex_item",
+        "required_category": ProductCategory.SHOES.value,
+        "max_price": 5000.0,
+        "excluded_product_ids": ["A" * 105]
+    }
+    r2 = client.post("/retrieve-products", json=oversized_item_payload, headers=AUTH_HEADERS)
+    assert r2.status_code == 400
+    assert "must not exceed 100 characters" in r2.text
+
+
+def test_security_headers_present():
+    """Verify basic security headers (nosniff, clickjacking prevention, referrer-policy) are set."""
+    response = client.get("/health")
+    assert response.status_code == 200
+    assert response.headers.get("x-content-type-options") == "nosniff"
+    assert response.headers.get("x-frame-options") == "DENY"
+    assert response.headers.get("referrer-policy") == "no-referrer"
+
+
+def test_security_unhandled_exception_no_leakage():
+    """Verify internal unhandled 500 exceptions return safe message without leaking stack or secrets."""
+    from unittest.mock import patch
+    secret_db_url = "postgresql://dbuser:UltraSecretPassword999@internal-host:5432/fashora_db"
+
+    with patch("app.api.routes.resolve_retrieval", side_effect=RuntimeError(f"Connection error to {secret_db_url}")):
+        response = client.post(
+            "/retrieve-products",
+            json={"request_id": "leak_test", "required_category": ProductCategory.SHOES.value, "max_price": 5000.0},
+            headers=AUTH_HEADERS
+        )
+        assert response.status_code == 500
+        assert response.json() == {
+            "detail": "Internal server error occurred. Request could not be completed."
+        }
+        body = response.text
+        assert "UltraSecretPassword999" not in body
+        assert "dbuser" not in body
+        assert "internal-host" not in body
+        assert "Traceback" not in body
+

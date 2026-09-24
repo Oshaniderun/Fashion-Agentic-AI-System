@@ -64,6 +64,17 @@ def retrieve_products(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="query_text exceeds the maximum allowed character limit (2000)."
         )
+    if request.excluded_product_ids:
+        if len(request.excluded_product_ids) > 100:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="excluded_product_ids exceeds the maximum allowed limit of 100 items."
+            )
+        if any(len(pid) > 100 for pid in request.excluded_product_ids):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Each excluded product ID must not exceed 100 characters."
+            )
 
     # Boundary input sanitization: strip non-printable ASCII control characters
     if request.query_text:
@@ -74,6 +85,10 @@ def retrieve_products(
         request.style = sanitize_input_text(request.style, max_len=100)
     if request.occasion:
         request.occasion = sanitize_input_text(request.occasion, max_len=100)
+    if request.excluded_product_ids:
+        request.excluded_product_ids = [
+            sanitize_input_text(pid, max_len=100) for pid in request.excluded_product_ids if pid
+        ]
 
     response = resolve_retrieval(request)
     return response

@@ -66,6 +66,22 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Security headers middleware (nosniff, clickjacking prevention, referrer policy)
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    try:
+        response = await call_next(request)
+    except Exception as exc:
+        logger.error(f"Unhandled exception in request pipeline: {exc}", exc_info=True)
+        response = JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"detail": "Internal server error occurred. Request could not be completed."},
+        )
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "no-referrer"
+    return response
+
 
 # Exception handlers to prevent data / stack trace leakage
 @app.exception_handler(StarletteHTTPException)
