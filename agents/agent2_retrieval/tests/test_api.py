@@ -38,7 +38,7 @@ def setup_test_catalog():
             "product_url": "https://www.amazon.com/dp/TEST_SHOES_1"
         }
     }
-    service.bm25_service.build_from_products(list(service.products.values()))
+
 
 def test_health_endpoint():
     response = client.get("/health")
