@@ -9,7 +9,7 @@ not against your code.
 | Agent | Endpoint | Request schema defined? | Response schema defined? |
 |---|---|---|---|
 | 1 — Wardrobe | `POST /api/agent/analyze` | ☑ | ☑ |
-| 2 — Retrieval | `POST /retrieve-products` | ☑ | ☑ |
+| 2 — Retrieval | `POST /retrieve-products`<br>*(aliases: `POST /api/v1/search`, `POST /api/v1/retrieval/search`)* | ☑ | ☑ |
 | 3 — Budget | `POST /optimize-budget` | ☐ | ☐ |
 | 4 — Decision | `POST /decide-outfit` | ☐ | ☐ |
 
@@ -58,7 +58,10 @@ plain language for people who haven't read the code.
 
 ## Agent 2 — `POST /retrieve-products`
 
+*(Aliases: `POST /api/v1/search`, `POST /api/v1/retrieval/search`)*
+
 **Schema source:** `shared/schemas/agent2_schemas.py` (frozen 2026-09, Stage 1)
+**Service port:** `8002`
 **Decision logic:** `agents/agent2_retrieval/app/decision_logic.py`
 
 ### Request (`RetrievalRequest`) — sent by: Orchestrator / Agent 3
