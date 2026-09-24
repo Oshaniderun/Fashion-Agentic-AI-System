@@ -5,6 +5,7 @@ Supports both user JWT Bearer tokens and inter-agent Shared Service Tokens.
 
 from typing import Generator, Optional
 import os
+from pathlib import Path
 from fastapi import Header, HTTPException, status, Depends
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
@@ -28,8 +29,13 @@ def create_db_engine(url: str):
             return eng
     except Exception:
         pass
-    # Fallback to local SQLite database
-    sqlite_url = "sqlite:///./agent2.db"
+    # Fallback to local SQLite database (resolve agent directory consistently)
+    agent_dir = Path(__file__).resolve().parent.parent.parent
+    agent_db = agent_dir / "agent2.db"
+    if agent_db.exists():
+        sqlite_url = f"sqlite:///{agent_db.as_posix()}"
+    else:
+        sqlite_url = "sqlite:///./agent2.db"
     return create_engine(sqlite_url, connect_args={"check_same_thread": False})
 
 engine = create_db_engine(db_url)
