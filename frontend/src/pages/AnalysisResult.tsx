@@ -126,11 +126,11 @@ export function AnalysisResult() {
                 </div>
               </div>
               <div>
-                <div className="meta">Available from wardrobe</div>
+                <div className="meta">Categories present in wardrobe (not necessarily a match)</div>
                 <div className="chip-row" style={{ marginTop: 6 }}>
                   {data.outfit_requirements.available_categories.map((c) => (
-                    <span key={c} className="badge badge-ok">
-                      ✓ {c}
+                    <span key={c} className="badge badge-muted">
+                      {c}
                     </span>
                   ))}
                 </div>

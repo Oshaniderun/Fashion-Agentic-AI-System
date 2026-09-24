@@ -4,7 +4,7 @@ Tests for Outfit Requirements and Missing Item Detection.
 
 from app.services.outfit_requirements import outfit_requirement_engine
 from app.services.missing_items import missing_item_detector
-from shared.schemas.agent1_schemas import UserRequirements, WardrobeSummaryItem
+from shared.schemas.agent1_schemas import RequestedItem, UserRequirements, WardrobeSummaryItem
 
 
 def test_missing_shoes_detection_scenario():
@@ -99,3 +99,46 @@ def test_interview_blouse_bottom_handoff_no_duplicate_bottom():
     assert "blouse" not in q  # already owned — not for Agent 2 search
     assert handoff.available_items[0].colour == "red"
     assert handoff.search_requirements.maximum_price == 4000.0
+
+
+def test_black_blouse_not_satisfied_by_red_blouse():
+    wardrobe = [
+        WardrobeSummaryItem(
+            wardrobe_id="W003",
+            category="top",
+            type="blouse",
+            colour="red",
+            formality=0.7,
+            style="casual",
+        )
+    ]
+    reqs = UserRequirements(
+        occasion="interview",
+        style=[],
+        colour_preferences=["black"],
+        requested_categories=["top"],
+        requested_types=["blouse"],
+        identified_items=[
+            RequestedItem(category="top", type="blouse", colour="black", role="requested")
+        ],
+    )
+    outfit_reqs, search_handoff, handoff = missing_item_detector.analyze_missing(
+        required_categories=["top"],
+        optional_categories=[],
+        owned_items=wardrobe,
+        user_requirements=reqs,
+        request_id="REQ-2026-3F94F9",
+    )
+    assert "top" in outfit_reqs.available_categories
+    assert "top" in outfit_reqs.missing_categories
+    assert handoff.wardrobe_status.matching_items == []
+    assert len(handoff.wardrobe_status.non_matching_items) == 1
+    assert handoff.wardrobe_status.non_matching_items[0].reason == "colour_mismatch"
+    assert handoff.wardrobe_status.non_matching_items[0].colour == "red"
+    assert search_handoff.categories == ["top"]
+    assert "blouse" in [t.lower() for t in search_handoff.types]
+    assert "black" in search_handoff.colour_preferences
+    q = (search_handoff.query_text or "").lower()
+    assert "black" in q
+    assert "blouse" in q
+    assert "interview" in q

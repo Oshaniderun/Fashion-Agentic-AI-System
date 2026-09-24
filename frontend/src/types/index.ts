@@ -135,6 +135,7 @@ export interface ConfidenceMetrics {
 export interface Agent2SearchRequirement {
   categories?: string[];
   missing_categories: string[];
+  types?: string[];
   style: string[];
   colour_preferences?: string[];
   colour: string[];
@@ -154,8 +155,14 @@ export interface Agent2AvailableItem {
   colour: string;
 }
 
+export interface Agent2NonMatchingItem extends Agent2AvailableItem {
+  reason: string;
+}
+
 export interface Agent2WardrobeStatus {
   available_categories: string[];
+  matching_items?: Agent2AvailableItem[];
+  non_matching_items?: Agent2NonMatchingItem[];
   missing_categories: string[];
 }
 

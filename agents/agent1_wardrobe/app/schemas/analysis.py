@@ -68,6 +68,8 @@ class FashionAnalysisResponse(BaseModel):
             wardrobe_status=Agent2WardrobeStatus(
                 available_categories=avail_cats,
                 missing_categories=missing,
+                matching_items=[],
+                non_matching_items=[],
             ),
             available_items=items,
             search_requirements=self.search_requirements,

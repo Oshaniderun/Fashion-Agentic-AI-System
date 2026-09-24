@@ -351,5 +351,51 @@
       "knit",
       "ribbed"
     ]
+  },
+  "colour_families": {
+    "dark": ["black", "navy", "grey", "brown", "charcoal"],
+    "neutral": ["white", "beige", "grey", "cream", "tan", "nude"],
+    "bright": ["red", "yellow", "orange", "pink"],
+    "pastel": ["pink", "blue", "lavender", "mint"]
+  },
+  "type_groups": {
+    "blouse": ["blouse"],
+    "shirt": ["shirt"],
+    "t-shirt": ["t-shirt", "tshirt", "tee"],
+    "sweater": ["sweater"],
+    "tank_top": ["tank_top", "tank top"],
+    "jeans": ["jeans"],
+    "trousers": ["trousers", "trouser", "pants", "pant", "slacks", "chinos"],
+    "skirt": ["skirt"],
+    "shorts": ["shorts"],
+    "leggings": ["leggings"],
+    "frock": ["frock", "dress"],
+    "midi_dress": ["midi_dress", "midi dress"],
+    "maxi_dress": ["maxi_dress", "maxi dress"],
+    "loafers": ["loafers", "loafer"],
+    "sneakers": ["sneakers", "sneaker"],
+    "boots": ["boots", "boot"],
+    "heels": ["heels", "heel"],
+    "sandals": ["sandals", "sandal"],
+    "slippers": ["slippers", "slipper"],
+    "flats": ["flats", "flat"],
+    "blazer": ["blazer"],
+    "jacket": ["jacket"],
+    "coat": ["coat"],
+    "handbag": ["handbag", "purse"],
+    "tote_bag": ["tote_bag", "tote"],
+    "clutch": ["clutch"],
+    "backpack": ["backpack"],
+    "belt": ["belt"],
+    "scarf": ["scarf"],
+    "hat": ["hat"],
+    "jewelry": ["jewelry", "jewellery", "earrings", "necklace"]
+  },
+  "match_reasons": {
+    "colour": "colour_mismatch",
+    "type": "type_mismatch",
+    "style": "style_mismatch",
+    "pattern": "pattern_mismatch",
+    "excluded_colour": "excluded_colour"
   }
 }

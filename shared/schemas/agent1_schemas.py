@@ -126,9 +126,27 @@ class Agent2AvailableItem(BaseModel):
     colour: str
 
 
+class Agent2NonMatchingItem(Agent2AvailableItem):
+    reason: str = Field(..., description="Why this owned item does not satisfy the request (e.g. colour_mismatch).")
+
+
 class Agent2WardrobeStatus(BaseModel):
-    available_categories: List[str] = Field(default_factory=list)
-    missing_categories: List[str] = Field(default_factory=list)
+    available_categories: List[str] = Field(
+        default_factory=list,
+        description="Categories physically present in the wardrobe. Presence is not fulfilment.",
+    )
+    matching_items: List[Agent2AvailableItem] = Field(
+        default_factory=list,
+        description="Owned items that satisfy every explicit constraint for their category.",
+    )
+    non_matching_items: List[Agent2NonMatchingItem] = Field(
+        default_factory=list,
+        description="Owned items in a required category that fail colour, type, style, or pattern.",
+    )
+    missing_categories: List[str] = Field(
+        default_factory=list,
+        description="Required categories with no matching owned item (Agent 2 should search these).",
+    )
 
 
 class Agent2SearchRequirement(BaseModel):
@@ -164,6 +182,10 @@ class Agent2SearchRequirement(BaseModel):
     )
     query_text: Optional[str] = Field(
         None, description="Deduped expanded query for BM25 / vector search."
+    )
+    types: List[str] = Field(
+        default_factory=list,
+        description="Specific garment types Agent 2 should retrieve (e.g. blouse).",
     )
     matching_reference_items: List[RequestedItem] = Field(
         default_factory=list,
@@ -248,6 +270,8 @@ class Agent1OutputContract(BaseModel):
             wardrobe_status=Agent2WardrobeStatus(
                 available_categories=avail_cats,
                 missing_categories=missing,
+                matching_items=[],
+                non_matching_items=[],
             ),
             available_items=items,
             search_requirements=self.search_requirements,

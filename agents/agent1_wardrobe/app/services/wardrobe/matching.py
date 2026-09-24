@@ -2,7 +2,8 @@
 Wardrobe Matching and Outfit Candidate Selection Service.
 """
 
-from typing import List, Dict, Any, Tuple
+from typing import List, Dict
+from app.services.item_match import constraints_for_category, item_satisfies
 from shared.schemas.agent1_schemas import UserRequirements, WardrobeSummaryItem
 
 
@@ -43,8 +44,8 @@ class WardrobeMatcher:
         for cat in required_categories:
             cat_lower = cat.lower()
             candidates = by_cat.get(cat_lower, [])
-            if not candidates and cat_lower in ["footwear", "footwear"]:
-                candidates = by_cat.get("footwear", []) or by_cat.get("footwear", [])
+            constraints = constraints_for_category(requirements, cat_lower)
+            candidates = [it for it in candidates if item_satisfies(it, constraints)]
 
             if candidates:
                 # Rank candidates by score
