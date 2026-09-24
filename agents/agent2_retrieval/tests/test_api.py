@@ -29,7 +29,7 @@ def setup_test_catalog():
         "TEST_SHOES_1": {
             "product_id": "TEST_SHOES_1",
             "product_name": "Test Loafers",
-            "category": "shoes",
+            "category": ProductCategory.SHOES.value,
             "colour": "Beige",
             "style": "smart casual",
             "price": 4000.0,
@@ -50,7 +50,7 @@ def test_health_endpoint():
 def test_retrieve_products_unauthorized():
     payload = {
         "request_id": "req_unauth",
-        "required_category": "shoes",
+        "required_category": ProductCategory.SHOES.value,
         "max_price": 5000.0,
         "top_k": 5
     }
@@ -60,7 +60,7 @@ def test_retrieve_products_unauthorized():
 def test_retrieve_products_with_service_token():
     payload = {
         "request_id": "req_service_tok",
-        "required_category": "shoes",
+        "required_category": ProductCategory.SHOES.value,
         "preferred_colour": "Beige",
         "max_price": 5000.0,
         "top_k": 5
@@ -79,7 +79,7 @@ def test_retrieve_products_with_jwt():
     headers = {"Authorization": f"Bearer {token}"}
     payload = {
         "request_id": "req_jwt",
-        "required_category": "shoes",
+        "required_category": ProductCategory.SHOES.value,
         "max_price": 5000.0,
         "top_k": 5
     }
@@ -92,7 +92,7 @@ def test_api_v1_search_alias():
     headers = {"X-Service-Token": settings.SERVICE_TOKEN}
     payload = {
         "request_id": "req_alias",
-        "required_category": "shoes",
+        "required_category": ProductCategory.SHOES.value,
         "max_price": 5000.0,
         "top_k": 5
     }

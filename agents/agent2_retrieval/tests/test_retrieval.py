@@ -47,7 +47,7 @@ SAMPLE_PRODUCTS = [
     {
         "product_id": "P_SHOE_1",
         "product_name": "Beige Suede Smart Loafers",
-        "category": "shoes",
+        "category": ProductCategory.SHOES.value,
         "colour": "Beige",
         "style": "smart casual",
         "price": 4800.0,
@@ -57,7 +57,7 @@ SAMPLE_PRODUCTS = [
     {
         "product_id": "P_SHOE_2",
         "product_name": "Black Leather Formal Oxfords",
-        "category": "shoes",
+        "category": ProductCategory.SHOES.value,
         "colour": "Black",
         "style": "formal",
         "price": 6000.0,
@@ -67,7 +67,7 @@ SAMPLE_PRODUCTS = [
     {
         "product_id": "P_SHOE_3",
         "product_name": "Brown Brogue Shoes",
-        "category": "shoes",
+        "category": ProductCategory.SHOES.value,
         "colour": "Brown",
         "style": "vintage",
         "price": 5400.0,
