@@ -247,3 +247,62 @@ def test_security_xss_payload():
     assert response.status_code == 200
     data = response.json()
     assert isinstance(data["results"], list)
+
+# 16. Configuration & Secret Hardening Tests (Phase 5.2)
+def test_config_canonical_env_names(monkeypatch):
+    """Verify that canonical env names JWT_SECRET and AGENT_SERVICE_TOKEN are read."""
+    from app.core.config import Settings
+    monkeypatch.setenv("JWT_SECRET", "custom_jwt_secret_token_123")
+    monkeypatch.setenv("AGENT_SERVICE_TOKEN", "custom_agent_token_456")
+    test_settings = Settings()
+    assert test_settings.JWT_SECRET == "custom_jwt_secret_token_123"
+    assert test_settings.SECRET_KEY == "custom_jwt_secret_token_123"
+    assert test_settings.AGENT_SERVICE_TOKEN == "custom_agent_token_456"
+    assert test_settings.SERVICE_TOKEN == "custom_agent_token_456"
+
+def test_config_backward_compatibility_aliases(monkeypatch):
+    """Verify that legacy env names SECRET_KEY and SERVICE_TOKEN still populate fields."""
+    from app.core.config import Settings
+    monkeypatch.delenv("JWT_SECRET", raising=False)
+    monkeypatch.delenv("AGENT_SERVICE_TOKEN", raising=False)
+    monkeypatch.setenv("SECRET_KEY", "legacy_jwt_secret_789")
+    monkeypatch.setenv("SERVICE_TOKEN", "legacy_service_token_012")
+    test_settings = Settings()
+    assert test_settings.JWT_SECRET == "legacy_jwt_secret_789"
+    assert test_settings.SECRET_KEY == "legacy_jwt_secret_789"
+    assert test_settings.AGENT_SERVICE_TOKEN == "legacy_service_token_012"
+    assert test_settings.SERVICE_TOKEN == "legacy_service_token_012"
+
+def test_config_cors_origins_parsing(monkeypatch):
+    """Verify CORS_ORIGINS comma-separated string is parsed into a list."""
+    from app.core.config import Settings
+    monkeypatch.setenv("CORS_ORIGINS", "https://app.fashora.com, http://localhost:3000,  https://admin.fashora.com ")
+    test_settings = Settings()
+    assert test_settings.cors_origins_list == [
+        "https://app.fashora.com",
+        "http://localhost:3000",
+        "https://admin.fashora.com"
+    ]
+
+def test_config_production_fails_when_secrets_missing(monkeypatch):
+    """Verify production environment fails safely when required secrets are missing."""
+    from app.core.config import Settings
+    monkeypatch.setenv("ENVIRONMENT", "production")
+    monkeypatch.delenv("JWT_SECRET", raising=False)
+    monkeypatch.delenv("SECRET_KEY", raising=False)
+    monkeypatch.delenv("AGENT_SERVICE_TOKEN", raising=False)
+    monkeypatch.delenv("SERVICE_TOKEN", raising=False)
+    with pytest.raises(ValueError) as exc_info:
+        Settings()
+    err_msg = str(exc_info.value)
+    assert "Production configuration error" in err_msg
+    assert "JWT_SECRET" in err_msg
+    assert "AGENT_SERVICE_TOKEN" in err_msg
+
+def test_cors_headers_response():
+    """Verify CORS response headers for allowed origins without wildcard credentials."""
+    response = client.get("/health", headers={"Origin": "http://localhost:3000"})
+    assert response.status_code == 200
+    assert response.headers.get("access-control-allow-origin") == "http://localhost:3000"
+    assert response.headers.get("access-control-allow-credentials") == "true"
+

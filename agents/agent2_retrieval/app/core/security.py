@@ -19,7 +19,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     else:
         expire = datetime.now(timezone.utc) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+    encoded_jwt = jwt.encode(to_encode, settings.JWT_SECRET, algorithm=settings.ALGORITHM)
     return encoded_jwt
 
 def decode_access_token(token: str) -> Dict[str, Any]:
@@ -29,7 +29,7 @@ def decode_access_token(token: str) -> Dict[str, Any]:
     """
     payload = jwt.decode(
         token,
-        settings.SECRET_KEY,
+        settings.JWT_SECRET,
         algorithms=[settings.ALGORITHM]
     )
     return payload
@@ -38,11 +38,11 @@ def verify_service_token(token: str) -> bool:
     """
     Validates inter-agent shared service token.
     """
-    if not token or not settings.SERVICE_TOKEN:
+    if not token or not settings.AGENT_SERVICE_TOKEN:
         return False
     # Constant-time comparison
     import hmac
-    return hmac.compare_digest(token.strip(), settings.SERVICE_TOKEN.strip())
+    return hmac.compare_digest(token.strip(), settings.AGENT_SERVICE_TOKEN.strip())
 
 def sanitize_input_text(text: Optional[str], max_len: int = 500) -> Optional[str]:
     """

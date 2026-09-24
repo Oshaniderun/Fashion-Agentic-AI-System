@@ -52,14 +52,20 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# CORS Middleware
+# Hardened CORS Middleware: use explicit allowed origins, never wildcard with credentials
+cors_origins = settings.cors_origins_list
+allow_creds = True
+if "*" in cors_origins:
+    allow_creds = False  # Browsers forbid allow_credentials=True with wildcard origin
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=cors_origins,
+    allow_credentials=allow_creds,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 # Exception handlers to prevent data / stack trace leakage
 @app.exception_handler(StarletteHTTPException)
