@@ -9,6 +9,11 @@ import { AddClothing } from './pages/AddClothing';
 import { WardrobeItemDetail } from './pages/WardrobeItemDetail';
 import { AnalysisResult } from './pages/AnalysisResult';
 import { AgentStatusPage } from './pages/AgentStatus';
+import { Agent2Dashboard } from './pages/agent2/Agent2Dashboard';
+import { Agent2Search } from './pages/agent2/Agent2Search';
+import { Agent2ProductDetail } from './pages/agent2/Agent2ProductDetail';
+import { Agent2History } from './pages/agent2/Agent2History';
+import { Agent2StatusPage } from './pages/agent2/Agent2Status';
 import { Settings } from './pages/Settings';
 import { SecurityLab } from './pages/SecurityLab';
 import { LoadingSkeleton } from './components/LoadingSkeleton';
@@ -40,6 +45,11 @@ export default function App() {
             <Route path="/wardrobe/:id" element={<WardrobeItemDetail />} />
             <Route path="/analysis/:requestId" element={<AnalysisResult />} />
             <Route path="/agent" element={<AgentStatusPage />} />
+            <Route path="/agent2" element={<Agent2Dashboard />} />
+            <Route path="/agent2/search" element={<Agent2Search />} />
+            <Route path="/agent2/products/:productId" element={<Agent2ProductDetail />} />
+            <Route path="/agent2/history" element={<Agent2History />} />
+            <Route path="/agent2/status" element={<Agent2StatusPage />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/security" element={<SecurityLab />} />
           </Route>

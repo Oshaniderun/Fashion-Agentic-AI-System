@@ -26,6 +26,26 @@ def load_outfit_rules() -> Dict[str, Any]:
 class OutfitRequirementEngine:
     """Configurable outfit category requirement engine."""
 
+    def clarification_needed(self, user_reqs: UserRequirements) -> bool:
+        """
+        True when the user's requested-item words could not be understood at all:
+        no garment category recognized and no occasion given. In that case the
+        default full-outfit template must NOT be invented (it would silently
+        mask the misunderstood request).
+        """
+        return bool(
+            user_reqs.unrecognized_terms
+            and not (user_reqs.requested_categories or [])
+            and not (user_reqs.occasion or "").strip()
+        )
+
+    def clarification_message(self, user_reqs: UserRequirements) -> str:
+        terms = ", ".join(f"\u201c{t}\u201d" for t in user_reqs.unrecognized_terms)
+        return (
+            f"Couldn\u2019t recognize {terms} as a clothing item. "
+            "Please rephrase your request (for example: \u201cI need a dress\u201d, \u201cI need a black blouse\u201d)."
+        )
+
     def determine_requirements(self, user_reqs: UserRequirements) -> Tuple[List[str], List[str]]:
         """
         Priority:
@@ -35,6 +55,10 @@ class OutfitRequirementEngine:
         """
         rules = load_outfit_rules()
         requested = [c.lower() for c in (user_reqs.requested_categories or [])]
+
+        if self.clarification_needed(user_reqs):
+            # Nothing understood -> invent nothing; caller surfaces a clarification prompt.
+            return [], []
 
         if requested:
             required: List[str] = []

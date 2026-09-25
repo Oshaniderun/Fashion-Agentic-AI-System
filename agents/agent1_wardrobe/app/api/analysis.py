@@ -78,6 +78,12 @@ def analyze_fashion_request(
         request_id=request_id,
     )
 
+    # 4b. If the request itself was not understood, surface a clarification
+    # prompt instead of a (suppressed) default-outfit verdict.
+    if outfit_requirement_engine.clarification_needed(extracted_reqs):
+        outfit_reqs.clarification_needed = True
+        outfit_reqs.clarification_message = outfit_requirement_engine.clarification_message(extracted_reqs)
+
     # 5. Select compatible wardrobe items
     compatible_items = wardrobe_matcher.select_compatible_items(
         wardrobe=summary_wardrobe,

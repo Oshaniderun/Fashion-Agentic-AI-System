@@ -57,9 +57,9 @@ class RetrievalRequest(BaseModel):
     query_text: Optional[str] = Field(
         None,
         description="Free-text search query, e.g. Agent 1's expanded query "
-        "'beige women's loafers smart casual under LKR 5000'. Drives the BM25/semantic side of retrieval.",
+        "'beige women's loafers smart casual under USD 5000'. Drives the BM25/semantic side of retrieval.",
     )
-    max_price: float = Field(..., gt=0, description="Ceiling in LKR for this single item.")
+    max_price: float = Field(..., gt=0, description="Ceiling in USD for this single item.")
     top_k: int = Field(5, ge=1, le=20, description="How many ranked results to return.")
 
     # --- feedback-loop fields (Agent 4 -> Agent 3 -> Agent 2) ---

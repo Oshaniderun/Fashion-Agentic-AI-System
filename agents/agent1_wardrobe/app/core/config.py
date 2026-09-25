@@ -30,7 +30,7 @@ class Settings(BaseSettings):
     ALLOWED_IMAGE_TYPES: List[str] = ["image/jpeg", "image/png", "image/webp"]
 
     # AI & Model Providers
-    LLM_PROVIDER: str = "mock"  # "mock", "gemini", "openai", "anthropic"
+    LLM_PROVIDER: str = "gemini"  # production: "gemini"; "mock" is for tests only; "openai"/"anthropic" also supported
     LLM_API_KEY: str = ""
     LLM_MODEL: str = "gemini-2.0-flash"
     VISION_MODEL_BACKEND: str = "auto"  # "auto", "local", "clip"

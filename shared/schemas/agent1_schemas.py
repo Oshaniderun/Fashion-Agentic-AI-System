@@ -46,7 +46,7 @@ class UserRequirements(BaseModel):
         description="Colors the user explicitly dislikes or wishes to exclude (e.g. ['bright'])."
     )
     budget: Optional[float] = Field(
-        None, gt=0, description="Stated user budget ceiling in LKR. None if unmentioned; never hallucinated."
+        None, gt=0, description="Stated user budget ceiling in USD. None if unmentioned; never hallucinated."
     )
     requested_categories: List[str] = Field(
         default_factory=list,
@@ -67,6 +67,10 @@ class UserRequirements(BaseModel):
     additional_preferences: List[str] = Field(
         default_factory=list,
         description="Additional user preferences or constraints extracted from the text."
+    )
+    unrecognized_terms: List[str] = Field(
+        default_factory=list,
+        description="Words in the requested-item position that could not be matched to any known garment term (e.g. 'xyzabc'). Never guessed."
     )
 
 
@@ -101,6 +105,14 @@ class OutfitRequirements(BaseModel):
     optional_categories: List[str] = Field(
         default_factory=list,
         description="Nice-to-have complement categories (e.g. 'bag', 'accessory')."
+    )
+    clarification_needed: bool = Field(
+        False,
+        description="True when the requested item could not be understood; no categories were invented for it."
+    )
+    clarification_message: Optional[str] = Field(
+        None,
+        description="User-facing prompt asking to clarify the unrecognized term(s)."
     )
 
 
@@ -176,7 +188,7 @@ class Agent2SearchRequirement(BaseModel):
         default_factory=list, description="Alias of pattern_preferences (legacy)."
     )
     occasion: Optional[str] = Field(None, description="Event context.")
-    maximum_price: Optional[float] = Field(None, description="Max price / remaining budget in LKR.")
+    maximum_price: Optional[float] = Field(None, description="Max price / remaining budget in USD.")
     budget_remaining: Optional[float] = Field(
         None, description="Alias of maximum_price (legacy)."
     )

@@ -6,6 +6,16 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
+      // Agent 2 (retrieval) rules MUST precede the generic '/api' rule so its
+      // versioned endpoints and health check reach port 8002, not Agent 1.
+      '/api/v1': {
+        target: 'http://127.0.0.1:8002',
+        changeOrigin: true,
+      },
+      '/health': {
+        target: 'http://127.0.0.1:8002',
+        changeOrigin: true,
+      },
       '/api': {
         target: 'http://localhost:8001',
         changeOrigin: true,

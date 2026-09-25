@@ -133,31 +133,55 @@ def extract_color_preferences_and_exclusions(text: str) -> Tuple[List[str], List
     return preferences, exclusions
 
 
+def _parse_amount(num_str: str) -> Optional[float]:
+    try:
+        return float(num_str.replace(",", ""))
+    except ValueError:
+        return None
+
+
 def extract_budget(text: str) -> Optional[float]:
-    """Extracts budget ceiling; preserves None if unmentioned."""
+    """Extracts budget ceiling; preserves None if unmentioned.
+
+    Team convention (2026-09-25): budgets are USD, so small amounts like
+    "under 50" are valid. The old LKR-era 100 floor only applied keyword
+    matches without an explicit currency token.
+    """
     lower = text.lower()
 
-    budget_matches = re.finditer(
-        r"(?:budget(?: of)?|spend(?: around)?|cost(?: of)?|under|around)\s*(?:lkr|rs\.?|\$)?\s*([0-9,]+)",
-        lower,
-    )
-    for m in budget_matches:
-        num_str = m.group(1).replace(",", "")
-        try:
-            val = float(num_str)
-            if 100 <= val <= 1000000:
-                return val
-        except ValueError:
-            continue
+    # Superseded LKR-era pattern (narrow keywords, hard 100 floor):
+    # r"(?:budget(?: of)?|spend(?: around)?|cost(?: of)?|under|around)\s*(?:lkr|rs\.?|\$)?\s*([0-9,]+)"
 
-    for m in re.finditer(r"(?:lkr|rs\.?)\s*([0-9,]+)", lower):
-        num_str = m.group(1).replace(",", "")
-        try:
-            val = float(num_str)
-            if 100 <= val <= 1000000:
-                return val
-        except ValueError:
+    currency = r"(?:lkr|rs\.?|usd|dollars?|bucks|rupees)"
+    number = r"([0-9,]+(?:\.[0-9]+)?)"
+
+    # Currency-keyword phrases: "budget of 50", "under $40", "up to 30 usd",
+    # "no more than 100 dollars", "max 25", "within 80"
+    for m in re.finditer(
+        rf"(?:budget(?:\s+of)?|spend(?:\s+around)?|cost(?:\s+of)?|under|below|within|around|"
+        rf"max(?:imum)?(?:\s+of)?|at\s+most|up\s+to|upto|less\s+than|no\s+more\s+than|"
+        rf"not\s+more\s+than|capped\s+at)\s*(\$\s*)?{number}\s*({currency})?",
+        lower,
+    ):
+        val = _parse_amount(m.group(2))
+        if val is None:
             continue
+        explicit_currency = bool(m.group(3)) or bool(m.group(1))
+        if explicit_currency and 1 <= val <= 1_000_000:
+            return val
+        if not explicit_currency and 10 <= val <= 1_000_000:
+            return val
+
+    # Currency-adjacent amounts: "$50", "USD 50", "50 dollars", "Rs. 3000"
+    for m in re.finditer(rf"(?:lkr|rs\.?|\$|usd)\s*{number}", lower):
+        val = _parse_amount(m.group(1))
+        if val is not None and 1 <= val <= 1_000_000:
+            return val
+
+    for m in re.finditer(rf"{number}\s*(?:{currency})", lower):
+        val = _parse_amount(m.group(1))
+        if val is not None and 1 <= val <= 1_000_000:
+            return val
 
     return None
 
@@ -446,3 +470,169 @@ def extract_item_specific_colours(text: str) -> set:
     """
     items = extract_items_with_roles(text)
     return {item["colour"] for item in items if item.get("colour")}
+
+
+# ---------------------------------------------------------------------------
+# Garbled-word handling: conservative typo correction + unrecognized terms
+# ---------------------------------------------------------------------------
+
+# Common function words / fashion-domain words that are NOT garment nouns.
+# They must never be reported as unrecognized.
+_REQUEST_STOPWORDS = {
+    # articles / prepositions / pronouns
+    "a", "an", "the", "for", "to", "of", "in", "on", "with", "without", "and",
+    "or", "my", "me", "i", "you", "your", "it", "that", "this", "some", "any",
+    "something", "anything", "like", "as", "but", "not", "too", "very", "more",
+    # request verbs / phrases
+    "need", "needs", "wanted", "want", "looking", "find", "buy", "get", "suggest",
+    "recommend", "search", "show", "help", "please", "can", "could", "would",
+    # generic (non-garment) nouns and modifiers
+    "outfit", "outfits", "clothes", "clothing", "wear", "wardrobe", "style",
+    "styles", "look", "looks", "new", "nice", "good", "best", "right", "perfect",
+    "occasion", "event", "budget", "spend", "money", "price", "cheap", "affordable",
+    "under", "below", "within", "around", "maximum", "max", "least", "total",
+    "rupees", "dollars", "lkr", "usd", "rs", "bucks",
+    # everyday words that often sit in the request slot
+    "dressy", "going", "weekend", "day", "night", "morning", "evening", "tomorrow",
+    "next", "this_week", "really", "just", "also", "maybe", "probably", "again",
+    "gym", "office", "college", "school", "university", "beach", "holiday", "trip",
+    "party", "dinner", "lunch", "brunch", "date", "function", "ceremony", "reception",
+    "interview", "meeting", "work", "wedding", "birthday", "concert", "club",
+}
+
+# Generic tail words: "a nice dress" — never flagged, never corrected.
+_SLOT_GENERIC_WORDS = {"one", "thing", "piece", "item", "items", "number"}
+
+
+def _edit_distance(a: str, b: str) -> int:
+    """Damerau-Levenshtein distance (transpositions count as one edit)."""
+    if a == b:
+        return 0
+    prev2: Optional[List[int]] = None
+    prev = list(range(len(b) + 1))
+    for i, ca in enumerate(a, start=1):
+        cur = [i]
+        for j, cb in enumerate(b, start=1):
+            cost = 0 if ca == cb else 1
+            val = min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + cost)
+            if prev2 is not None and i > 1 and j > 1 and ca == b[j - 2] and a[i - 2] == cb:
+                val = min(val, prev2[j - 2] + cost)
+            cur.append(val)
+        prev2, prev = prev, cur
+    return prev[len(b)]
+
+
+def _max_typo_distance(word_len: int) -> int:
+    # Conservative: only 1 edit for normal words, 2 for long ones, none for very short.
+    if word_len <= 3:
+        return 0
+    return 1 if word_len <= 7 else 2
+
+
+@lru_cache(maxsize=1)
+def _garment_word_lexicon() -> Dict[str, str]:
+    """token -> canonical correction target. Garment synonyms plus common colour words."""
+    lexicon: Dict[str, str] = {}
+    for meta in load_ontology().get("garments", {}).values():
+        for syn in meta.get("synonyms", []):
+            for token in re.findall(r"[a-z]+(?:-[a-z]+)*", syn.lower()):
+                lexicon.setdefault(token, token)
+    for canonical in load_ontology().get("colours", {}):
+        lexicon.setdefault(canonical.lower(), canonical.lower())
+    for syns in load_ontology().get("patterns", {}).values():
+        for syn in syns:
+            for token in re.findall(r"[a-z]+(?:-[a-z]+)*", syn.lower()):
+                lexicon.setdefault(token, token)
+    extra_colours = {
+        "white", "black", "red", "blue", "green", "yellow", "pink", "purple",
+        "orange", "brown", "grey", "gray", "navy", "beige", "cream", "maroon",
+        "gold", "silver", "mint", "lavender", "turquoise", "teal", "burgundy",
+    }
+    for c in extra_colours:
+        lexicon.setdefault(c, c)
+    # common plurals of single-token garment words so "dresses" is known
+    for token in list(lexicon.keys()):
+        lexicon.setdefault(token + "s", token + "s")
+        lexicon.setdefault(token + "es", token + "es")
+    return lexicon
+
+
+@lru_cache(maxsize=1)
+def _known_vocabulary() -> set:
+    """Every word the ontology understands: garments, colours, occasions, styles, patterns."""
+    onto = load_ontology()
+    known: set = set(_garment_word_lexicon().keys())
+    for group in ("occasions", "styles", "colours", "patterns", "type_groups"):
+        data = onto.get(group, {})
+        for canonical, synonyms in data.items():
+            known.add(canonical.lower().replace("_", " "))
+            terms = synonyms if isinstance(synonyms, list) else synonyms.get("synonyms", [])
+            for syn in terms:
+                for token in re.findall(r"[a-z]+(?:-[a-z]+)*", str(syn).lower()):
+                    known.add(token)
+    return known
+
+
+def _candidate_slots(lower: str) -> List[str]:
+    """Word lists following request phrases and following articles."""
+    slots: List[str] = []
+    for pat, n in (
+        (r"(?:i\s+need|i\s+want|i\s+would\s+like|i'?d\s+like|i'?m\s+looking\s+for|looking\s+for"
+          r"|find\s+me|can\s+you\s+find|get\s+me|need\s+(?:a|an|some|to\s+buy)|want\s+(?:a|an|some)"
+          r"|buy\s+(?:a|an|some|me)|search\s+for|suggest(?:\s+me)?|recommend(?:\s+me)?)", 6),
+        (r"\b(?:a|an|the)\b", 4),
+    ):
+        for m in re.finditer(pat, lower):
+            tail = lower[m.end():]
+            words = re.findall(r"[a-z]+(?:-[a-z]+)*", tail[:80])
+            slots.append(words[:n])
+    return [s for s in slots if s]
+
+
+def correct_garbled_words(text: str) -> Tuple[str, Dict[str, str], List[str]]:
+    """
+    Inside request slots ('i need a ...', 'a <word>'), match each word against the
+    known fashion vocabulary. Unknown words within a conservative edit distance of
+    a known garment/colour word are corrected (dres -> dress, whte -> white).
+    Words that sit in a garment-noun position (directly after an article, or the
+    tail word of the slot) with no close match are reported as unrecognized.
+    Generic words (outfit, one, ...) and known vocabulary are never flagged.
+
+    Returns (corrected_text, {original: corrected}, [unrecognized_terms]).
+    """
+    lower = text.lower()
+    lexicon = _garment_word_lexicon()
+    known = _known_vocabulary()
+    corrections: Dict[str, str] = {}
+    unrecognized: List[str] = []
+
+    for words in _candidate_slots(lower):
+        for i, w in enumerate(words):
+            if w in lexicon or w in known or w in _REQUEST_STOPWORDS:
+                continue
+            best = None
+            best_dist = 99
+            limit = _max_typo_distance(len(w))
+            if limit > 0:
+                for kw in lexicon:
+                    d = _edit_distance(w, kw)
+                    if d < best_dist or (d == best_dist and best is not None and len(kw) < len(best)):
+                        if d <= limit:
+                            best, best_dist = kw, d
+            if best is not None:
+                corrections[w] = best
+                continue
+            prev_word = words[i - 1] if i > 0 else None
+            is_noun_position = (i == len(words) - 1) or (prev_word in {"a", "an", "the"})
+            looks_like_word = re.fullmatch(r"[a-z]{3,}", w) is not None
+            if is_noun_position and looks_like_word and w not in _SLOT_GENERIC_WORDS:
+                if w not in unrecognized:
+                    unrecognized.append(w)
+
+    if not corrections:
+        return text, corrections, unrecognized
+
+    corrected = text
+    for orig, repl in corrections.items():
+        corrected = re.sub(r"\b" + re.escape(orig) + r"\b", repl, corrected)
+    return corrected, corrections, unrecognized

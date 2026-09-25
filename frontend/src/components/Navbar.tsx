@@ -3,18 +3,20 @@ import {
   Shirt,
   PlusCircle,
   Sparkles,
-  Menu,
+  Search,
+  Boxes,
   LogOut,
 } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { API_DOCS_URL } from '../config';
 
 const LINKS = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { to: '/request', label: 'Fashion Request', icon: Sparkles },
   { to: '/wardrobe', label: 'Wardrobe', icon: Shirt },
   { to: '/wardrobe/add', label: 'Add Clothing', icon: PlusCircle },
+  { to: '/agent2', label: 'Retrieval History', icon: Boxes, end: true },
+  { to: '/agent2/search', label: 'Product Search', icon: Search },
 ];
 
 interface Props {
@@ -59,19 +61,5 @@ export function Sidebar({ open, onClose }: Props) {
         </button>
       </div>
     </aside>
-  );
-}
-
-export function Topbar({ onMenu }: { onMenu: () => void }) {
-  return (
-    <header className="topbar">
-      <button type="button" className="menu-btn" onClick={onMenu} aria-label="Open menu">
-        <Menu size={18} />
-      </button>
-      <div className="meta">Agent 1 · Wardrobe Intelligence</div>
-      <a className="btn btn-secondary" href={API_DOCS_URL} target="_blank" rel="noreferrer">
-        API Docs
-      </a>
-    </header>
   );
 }

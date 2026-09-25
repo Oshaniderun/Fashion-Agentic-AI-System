@@ -1,16 +1,24 @@
 """
 Vision heuristic tests for frock/check detection without CLIP.
+These tests validate the local heuristic analyzer, so the live LLM
+backends (Gemini vision + CLIP) are pinned off to keep them deterministic
+and avoid consuming Gemini quota on synthetic images.
 """
 
 from PIL import Image, ImageDraw
 import pytest
+from app.core.config import settings
 from app.services.image_analysis.analyzer import master_image_analyzer
 from app.services.image_analysis.clip_analyzer import clip_analyzer
 
 @pytest.fixture(autouse=True)
-def disable_clip():
+def disable_external_vision_backends(monkeypatch):
     original = clip_analyzer.is_loaded
     clip_analyzer.is_loaded = False
+    # analyzer.py only calls Gemini when LLM_PROVIDER == 'gemini' and an API key
+    # is set; mock makes it fall through to the local heuristic analyzer.
+    monkeypatch.setattr(settings, "LLM_PROVIDER", "mock")
+    monkeypatch.setattr(settings, "LLM_API_KEY", "")
     yield
     clip_analyzer.is_loaded = original
 

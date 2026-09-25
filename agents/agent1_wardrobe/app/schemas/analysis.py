@@ -25,7 +25,7 @@ class FashionRequestInput(BaseModel):
     occasion: Optional[str] = Field(None, description="Optional explicit occasion override.")
     style: Optional[str] = Field(None, description="Optional explicit style override.")
     colour_preference: Optional[str] = Field(None, description="Optional explicit color preference.")
-    budget: Optional[float] = Field(None, gt=0, description="Optional explicit budget ceiling in LKR.")
+    budget: Optional[float] = Field(None, gt=0, description="Optional explicit budget ceiling in USD.")
 
 
 class FashionAnalysisResponse(BaseModel):

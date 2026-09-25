@@ -2,9 +2,8 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { listWardrobe } from '../services/wardrobeService';
 import { getLatestAnalysis } from '../services/analysisService';
-import { getAgentStatus } from '../services/agentService';
 import { extractErrorMessage, imageUrl } from '../services/api';
-import type { AgentStatus, FashionAnalysisResponse, WardrobeItem } from '../types';
+import type { FashionAnalysisResponse, WardrobeItem } from '../types';
 import { ErrorAlert } from '../components/ErrorAlert';
 import { LoadingSkeleton } from '../components/LoadingSkeleton';
 import { MissingItemsBadge } from '../components/MissingItemsBadge';
@@ -16,16 +15,14 @@ function countBy(items: WardrobeItem[], pred: (i: WardrobeItem) => boolean) {
 export function Dashboard() {
   const [items, setItems] = useState<WardrobeItem[]>([]);
   const [latest, setLatest] = useState<FashionAnalysisResponse | null>(null);
-  const [status, setStatus] = useState<AgentStatus | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([listWardrobe(), getLatestAnalysis(), getAgentStatus()])
-      .then(([wardrobe, analysis, agent]) => {
+    Promise.all([listWardrobe(), getLatestAnalysis()])
+      .then(([wardrobe, analysis]) => {
         setItems(wardrobe);
         setLatest(analysis);
-        setStatus(agent);
       })
       .catch((err) => setError(extractErrorMessage(err)))
       .finally(() => setLoading(false));
@@ -102,22 +99,6 @@ export function Dashboard() {
         </div>
 
         <div className="stack">
-          <div className="panel">
-            <h2>Agent status</h2>
-            {status ? (
-              <>
-                <span className={`badge ${status.status === 'healthy' ? 'badge-ok' : 'badge-warn'}`}>
-                  {status.status}
-                </span>
-                <p className="meta" style={{ marginTop: 8 }}>
-                  {status.agent} · v{status.version}
-                </p>
-              </>
-            ) : (
-              <p className="meta">Unavailable</p>
-            )}
-          </div>
-
           <div className="panel">
             <h2>Last analysis</h2>
             {latest ? (

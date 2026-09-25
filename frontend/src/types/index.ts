@@ -116,6 +116,8 @@ export interface OutfitRequirements {
   available_categories: string[];
   missing_categories: string[];
   optional_categories: string[];
+  clarification_needed?: boolean;
+  clarification_message?: string | null;
 }
 
 export interface CompatibilityDetails {

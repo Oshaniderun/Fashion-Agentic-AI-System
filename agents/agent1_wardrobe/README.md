@@ -84,7 +84,7 @@ See `.env.example`:
 |---|---|
 | `DATABASE_URL` | SQLite by default; swap for PostgreSQL later |
 | `JWT_SECRET` | Auth signing key |
-| `LLM_PROVIDER` | `mock` (default), `openai`, or `anthropic` |
+| `LLM_PROVIDER` | `gemini` (default, production), `mock` (testing only), `openai`, or `anthropic` |
 | `LLM_API_KEY` | Only when using a live LLM |
 | `VISION_MODEL_BACKEND` | `auto` / `local` / `clip` |
 | `UPLOAD_DIR` | Local image storage |
@@ -112,7 +112,7 @@ See `.env.example`:
 ## AI pipeline (replaceable)
 
 - **Vision (default):** Pillow + scikit-learn K-Means colour + texture heuristics; optional CLIP behind `clip_analyzer.py`
-- **NLP (default):** Regex / synonym normalizer + mock/configurable LLM structured extractor
+- **NLP (default):** Regex / synonym normalizer + Gemini structured extractor (deterministic NLP fallback; `mock` provider for tests)
 - **Security:** Prompt injection guard on natural-language input
 - **Reasoning:** Outfit requirement rules, missing-category set difference, multi-attribute compatibility scores with explanations
 

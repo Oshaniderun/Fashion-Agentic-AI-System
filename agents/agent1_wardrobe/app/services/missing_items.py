@@ -239,7 +239,9 @@ class MissingItemDetector:
                 ref_strs.append(f"{colour} {kind}".strip())
             parts.append(f"matching {' and '.join(ref_strs)}")
         if budget:
-            parts.append(f"under LKR {int(budget)}")
+            # Budgets/prices are USD across the system (Agent 2 catalogue is USD-priced).
+            # Superseded LKR-era line: parts.append(f"under LKR {int(budget)}")
+            parts.append(f"under USD {int(budget)}")
 
         seen: Set[str] = set()
         out: List[str] = []

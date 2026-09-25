@@ -34,9 +34,6 @@ export function LoginRegister() {
       <div className="auth-panel stack">
         <div>
           <p className="brand-mark">FASHORA</p>
-          <p className="brand-sub" style={{ marginTop: 4 }}>
-            Style & Wardrobe Intelligence — Agent 1
-          </p>
         </div>
 
         <div className="chip-row">

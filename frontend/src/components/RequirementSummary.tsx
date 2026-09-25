@@ -40,7 +40,7 @@ export function RequirementSummary({ requirements }: { requirements: UserRequire
     },
     {
       label: 'Budget',
-      value: requirements.budget != null ? `LKR ${requirements.budget.toLocaleString()}` : 'Not specified',
+      value: requirements.budget != null ? `USD ${requirements.budget.toLocaleString()}` : 'Not specified',
     },
   ];
 

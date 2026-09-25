@@ -56,7 +56,7 @@ RULES:
 
 class StructuredRequirementExtractor(BaseLLMProvider):
     """
-    Structured NLP extraction provider with pluggable LLM backends (Anthropic, OpenAI, or local deterministic rule engine).
+    Structured NLP extraction provider with pluggable LLM backends (Gemini default; Anthropic/OpenAI also supported, or local deterministic rule engine).
     """
 
     def __init__(self):
@@ -68,23 +68,28 @@ class StructuredRequirementExtractor(BaseLLMProvider):
         Extracts structured requirements, prioritizing safe deterministic normalization
         or calling external LLM if configured.
         """
+        # Garbled-word pass: conservative typo correction inside request slots
+        # (dres -> dress) plus reporting of terms that could not be understood.
+        from app.services.nlp.normalization import correct_garbled_words
+        corrected_text, _corrections, unrecognized = correct_garbled_words(sanitized_text)
+
         # Always run local NLP extraction first for validation and baseline
-        local_occasion = normalize_occasion(sanitized_text)
-        local_styles = normalize_styles(sanitized_text)
-        local_colors, local_exclusions = extract_color_preferences_and_exclusions(sanitized_text)
-        local_budget = extract_budget(sanitized_text)
-        local_patterns = extract_pattern_preferences(sanitized_text)
-        
+        local_occasion = normalize_occasion(corrected_text)
+        local_styles = normalize_styles(corrected_text)
+        local_colors, local_exclusions = extract_color_preferences_and_exclusions(corrected_text)
+        local_budget = extract_budget(corrected_text)
+        local_patterns = extract_pattern_preferences(corrected_text)
+
         from app.services.nlp.normalization import extract_items_with_roles
-        local_items = extract_items_with_roles(sanitized_text)
-        
+        local_items = extract_items_with_roles(corrected_text)
+
         local_cats = list(dict.fromkeys(item["category"] for item in local_items if item.get("role") == "requested"))
         local_types = list(dict.fromkeys(item["type"] for item in local_items if item.get("role") == "requested" and item.get("type")))
 
         # If LLM provider is configured and API key is present, attempt LLM call
         if self.provider in ["anthropic", "openai", "gemini", "google"] and self.api_key:
             try:
-                llm_result = self._call_llm(sanitized_text)
+                llm_result = self._call_llm(corrected_text)
                 if llm_result:
                     return self._harmonize_and_validate(
                         llm_result,
@@ -97,11 +102,15 @@ class StructuredRequirementExtractor(BaseLLMProvider):
                         local_types,
                         local_patterns,
                         local_items,
+                        unrecognized,
                     )
             except Exception as e:
                 logger.warning(f"LLM extraction failed, safely falling back to deterministic NLP: {e}")
 
         default_style = local_styles if local_styles else (["casual"] if not local_cats else [])
+
+        # Clarification only matters when nothing was understood at all.
+        final_unrecognized = unrecognized if not local_cats else []
         
         from shared.schemas.agent1_schemas import RequestedItem
         requested_items_objs = [RequestedItem(**it) for it in local_items]
@@ -116,7 +125,8 @@ class StructuredRequirementExtractor(BaseLLMProvider):
             requested_types=local_types,
             identified_items=requested_items_objs,
             pattern_preferences=local_patterns,
-            additional_preferences=[]
+            additional_preferences=[],
+            unrecognized_terms=final_unrecognized,
         )
 
     def _call_llm(self, text: str) -> Optional[Dict[str, Any]]:
@@ -225,6 +235,7 @@ class StructuredRequirementExtractor(BaseLLMProvider):
         local_types: list,
         local_patterns: list,
         local_items: list,
+        unrecognized: list,
     ) -> UserRequirements:
         """Validates LLM data against Pydantic schema and ensures no hallucinations."""
         budget = llm_data.get("budget")
@@ -294,6 +305,11 @@ class StructuredRequirementExtractor(BaseLLMProvider):
         if not styles and not cats:
             styles = ["casual"]
 
+        # If neither local NLP nor the LLM understood the requested item, keep the
+        # unrecognized terms so the pipeline can ask for clarification instead of
+        # inventing a default outfit. Once any garment is recognized, terms are moot.
+        final_unrecognized = unrecognized if not cats and not merged_items_objs else []
+
         return UserRequirements(
             occasion=occ,
             style=styles,
@@ -304,7 +320,8 @@ class StructuredRequirementExtractor(BaseLLMProvider):
             requested_types=types,
             identified_items=merged_items_objs,
             pattern_preferences=patterns,
-            additional_preferences=llm_data.get("additional_preferences", []) or []
+            additional_preferences=llm_data.get("additional_preferences", []) or [],
+            unrecognized_terms=final_unrecognized,
         )
 
 

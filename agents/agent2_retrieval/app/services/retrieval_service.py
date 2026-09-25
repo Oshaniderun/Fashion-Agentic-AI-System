@@ -78,8 +78,10 @@ class RetrievalService:
             self.reload_catalog()
 
         req_cat_value = request.required_category.value if hasattr(request.required_category, "value") else str(request.required_category)
-        # Normalize category taxonomy alias: "footwear" enum value maps to "shoes" in dataset/indexes
-        search_category = "shoes" if req_cat_value == "footwear" else req_cat_value
+        # Taxonomy alias removed: catalogue/index categories were normalized to Agent 1's
+        # "footwear" value (migration 2026-09-25), so no "shoes" mapping is needed anymore.
+        # search_category = "shoes" if req_cat_value == "footwear" else req_cat_value
+        search_category = req_cat_value
         excluded_ids = set(request.excluded_product_ids or [])
 
         # Construct search query string

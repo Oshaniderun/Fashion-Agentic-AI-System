@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { RequirementSummary } from '../components/RequirementSummary';
 import { MissingItemsBadge } from '../components/MissingItemsBadge';
@@ -7,16 +7,23 @@ import { ConfidenceBadge } from '../components/ConfidenceBadge';
 import { ErrorAlert } from '../components/ErrorAlert';
 import { LoadingSkeleton } from '../components/LoadingSkeleton';
 import { getAnalysis } from '../services/analysisService';
+import { searchFromAgent1Handoff } from '../services/agent2Service';
+import { statusMeta, describeHttpError } from '../services/agent2Format';
+import { recordRecentSearch } from '../services/agent2History';
+import { ProductCard } from '../components/ProductCard';
 import { extractErrorMessage, imageUrl } from '../services/api';
 import type { FashionAnalysisResponse } from '../types';
+import type { HandoffRetrievalResponse } from '../types/agent2';
 
 export function AnalysisResult() {
   const { requestId } = useParams();
   const [data, setData] = useState<FashionAnalysisResponse | null>(null);
-  const [tab, setTab] = useState<'overview' | 'json'>('overview');
-  const [copied, setCopied] = useState(false);
+  const [tab, setTab] = useState<'overview' | 'handoff'>('overview');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [handoff, setHandoff] = useState<HandoffRetrievalResponse | null>(null);
+  const [handoffLoading, setHandoffLoading] = useState(false);
+  const [handoffError, setHandoffError] = useState('');
 
   useEffect(() => {
     if (!requestId) return;
@@ -39,12 +46,47 @@ export function AnalysisResult() {
       .finally(() => setLoading(false));
   }, [requestId]);
 
-  const copyJson = async () => {
-    if (!data) return;
-    await navigator.clipboard.writeText(JSON.stringify(data.raw_agent1_contract, null, 2));
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1800);
+  const runHandoff = async () => {
+    if (!data?.agent2_handoff) return;
+    setHandoffLoading(true);
+    setHandoffError('');
+    try {
+      const res = await searchFromAgent1Handoff(data.agent2_handoff);
+      setHandoff(res);
+      const q = data.agent2_handoff.search_requirements?.query_text ?? data.input_text;
+      res.retrievals.forEach((r) => {
+        if (r.response) {
+          recordRecentSearch({
+            at: new Date().toISOString(),
+            category: r.category,
+            query_text: q,
+            status: r.response.status,
+            results: r.response.results.length,
+            response: r.response,
+          });
+        }
+      });
+    } catch (err) {
+      setHandoff(null);
+      const status = (err as { response?: { status?: number } }).response?.status;
+      setHandoffError(status ? describeHttpError(status) : extractErrorMessage(err));
+    } finally {
+      setHandoffLoading(false);
+    }
   };
+
+  // Auto-run the Agent 2 retrieval once per analysis so results render below the handoff JSON
+  // without requiring a click; the button stays as a manual re-run/retry.
+  // Skipped when the request needs clarification or nothing was flagged missing.
+  const needsClarification = !!data?.outfit_requirements.clarification_needed;
+  const autoRanFor = useRef<string | null>(null);
+  useEffect(() => {
+    if (!data?.agent2_handoff || autoRanFor.current === requestId) return;
+    if (data.outfit_requirements.clarification_needed) return;
+    if ((data.agent2_handoff.search_requirements?.categories ?? []).length === 0) return;
+    autoRanFor.current = requestId ?? null;
+    void runHandoff();
+  }, [data, requestId]);
 
   if (loading) {
     return (
@@ -72,8 +114,7 @@ export function AnalysisResult() {
       <div className="page-header">
         <h1>Analysis Result</h1>
         <p>
-          Request <code>{data.request_id}</code> — AI extraction vs owned wardrobe. Agent 1 does not buy or rank
-          products.
+          Request <code>{data.request_id}</code> — AI extraction vs owned wardrobe.
         </p>
       </div>
 
@@ -85,21 +126,26 @@ export function AnalysisResult() {
         >
           Overview
         </button>
-        <button type="button" className={`chip ${tab === 'json' ? 'active' : ''}`} onClick={() => setTab('json')}>
-          Agent 1 JSON
+        <button
+          type="button"
+          className={`chip ${tab === 'handoff' ? 'active' : ''}`}
+          onClick={() => setTab('handoff')}
+        >
+          Handoff by Agent 1
         </button>
-        <ConfidenceBadge value={data.confidence.overall} label="Overall" />
       </div>
 
-      {tab === 'json' ? (
+      {tab === 'handoff' ? (
         <div className="panel stack">
           <div className="row" style={{ justifyContent: 'space-between' }}>
-            <h2 style={{ margin: 0 }}>Structured contract for Agent 2</h2>
-            <button type="button" className="btn btn-secondary" onClick={copyJson}>
-              {copied ? 'Copied' : 'Copy for Agent 2'}
-            </button>
+            <h2 style={{ margin: 0 }}>Handoff by Agent 1</h2>
+            <p className="meta" style={{ margin: 0 }}>
+              Structured package Agent 2 should consume (requirements + wardrobe gaps + search brief).
+            </p>
           </div>
-          <pre className="code-block">{JSON.stringify(data.raw_agent1_contract, null, 2)}</pre>
+          <pre className="code-block">
+            {JSON.stringify(data.agent2_handoff ?? data.search_requirements, null, 2)}
+          </pre>
         </div>
       ) : (
         <div className="stack">
@@ -113,8 +159,19 @@ export function AnalysisResult() {
               <h2>Detected requirements</h2>
               <RequirementSummary requirements={data.user_requirements} />
             </div>
-            <div className="panel stack">
-              <h2>Outfit categories</h2>
+            {needsClarification ? (
+              <div className="panel stack">
+                <h2>Need a little more detail</h2>
+                <p style={{ margin: 0 }}>{data.outfit_requirements.clarification_message}</p>
+                <div>
+                  <Link className="btn btn-primary" to="/request">
+                    Edit request
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <div className="panel stack">
+                <h2>Outfit categories</h2>
               <div>
                 <div className="meta">Required</div>
                 <div className="chip-row" style={{ marginTop: 6 }}>
@@ -141,7 +198,8 @@ export function AnalysisResult() {
                   <MissingItemsBadge outfit={data.outfit_requirements} />
                 </div>
               </div>
-            </div>
+              </div>
+            )}
           </div>
 
           <div className="panel">
@@ -211,15 +269,79 @@ export function AnalysisResult() {
             </div>
           )}
 
-          <div className="panel">
-            <h2>Agent 2 handoff preview</h2>
-            <p className="meta" style={{ marginBottom: 8 }}>
-              Structured package Agent 2 should consume (requirements + wardrobe gaps + search brief).
-            </p>
-            <pre className="code-block">
-              {JSON.stringify(data.agent2_handoff ?? data.search_requirements, null, 2)}
-            </pre>
+          {!needsClarification && (
+          <div className="panel stack">
+            <div className="row" style={{ justifyContent: 'space-between' }}>
+              <h2 style={{ margin: 0 }}>Find products</h2>
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={runHandoff}
+                disabled={handoffLoading || !data.agent2_handoff}
+              >
+                {handoffLoading ? 'Retrieving…' : handoff ? 'Re-run retrieval' : 'Retrieve missing items'}
+              </button>
+            </div>
+            {!data.agent2_handoff && (
+              <p className="meta">
+                No Agent 2 handoff payload is available for this analysis, so retrieval cannot be run.
+              </p>
+            )}
+
+            <ErrorAlert message={handoffError} />
+
+            {handoff && (
+              <div className="stack">
+                <p className="meta">
+                  Price ceiling used: <strong>{handoff.price_ceiling_used.toLocaleString()} {handoff.price_currency}</strong>
+                  {' '}· request <code>{handoff.request_id}</code>
+                </p>
+                {handoff.warnings.map((w) => (
+                  <div key={w} className="alert alert-info">
+                    {w}
+                  </div>
+                ))}
+
+                {handoff.retrievals.length === 0 && (
+                  <p className="meta">Agent 2 reported nothing to retrieve for this handoff.</p>
+                )}
+
+                {handoff.retrievals.map((r) => {
+                  if (r.error) {
+                    return (
+                      <div key={r.category} className="alert alert-error">
+                        {r.category}: {r.error}
+                      </div>
+                    );
+                  }
+                  const m = r.response ? statusMeta(r.response.status, r.response.relaxed_constraints) : null;
+                  return (
+                    <div key={r.category} className="panel">
+                      <div className="row" style={{ justifyContent: 'space-between' }}>
+                        <h3 style={{ margin: 0, textTransform: 'capitalize' }}>{r.category}</h3>
+                        {m && <span className={m.badgeClass}>{m.label}</span>}
+                      </div>
+                      {m && <p className="meta">{m.message}</p>}
+                      {r.response && r.response.results.length > 0 ? (
+                        <div className="wardrobe-grid" style={{ marginTop: 10 }}>
+                          {r.response.results.map((p) => (
+                            <ProductCard
+                              key={p.product_id}
+                              product={p}
+                              currency={handoff.price_currency}
+                            />
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="meta">No products returned for this category.</p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
+          )}
         </div>
       )}
     </div>

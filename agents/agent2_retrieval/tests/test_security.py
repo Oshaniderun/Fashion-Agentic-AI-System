@@ -293,7 +293,9 @@ def test_config_production_fails_when_secrets_missing(monkeypatch):
     monkeypatch.delenv("AGENT_SERVICE_TOKEN", raising=False)
     monkeypatch.delenv("SERVICE_TOKEN", raising=False)
     with pytest.raises(ValueError) as exc_info:
-        Settings()
+        # _env_file=None: without this, Settings() re-reads the real .env and
+        # the secrets are present, so the missing-secrets guard never fires.
+        Settings(_env_file=None)
     err_msg = str(exc_info.value)
     assert "Production configuration error" in err_msg
     assert "JWT_SECRET" in err_msg
