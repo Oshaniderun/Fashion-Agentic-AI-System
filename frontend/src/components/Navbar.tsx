@@ -5,6 +5,7 @@ import {
   Sparkles,
   Search,
   Boxes,
+  Wallet,
   LogOut,
 } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
@@ -17,6 +18,7 @@ const LINKS = [
   { to: '/wardrobe/add', label: 'Add Clothing', icon: PlusCircle },
   { to: '/agent2', label: 'Retrieval History', icon: Boxes, end: true },
   { to: '/agent2/search', label: 'Product Search', icon: Search },
+  { to: '/budget', label: 'Budget', icon: Wallet },
 ];
 
 interface Props {

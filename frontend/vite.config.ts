@@ -12,6 +12,15 @@ export default defineConfig({
         target: 'http://127.0.0.1:8002',
         changeOrigin: true,
       },
+      '/budget': {
+        target: 'http://127.0.0.1:8003',
+        changeOrigin: true,
+        // Browser navigation to SPA pages like /budget/<request-id> must render
+        // the app, not hit the backend. API calls (axios) send JSON Accept headers
+        // and are still proxied.
+        bypass: (req) =>
+          req.headers.accept?.includes('text/html') ? '/index.html' : undefined,
+      },
       '/health': {
         target: 'http://127.0.0.1:8002',
         changeOrigin: true,

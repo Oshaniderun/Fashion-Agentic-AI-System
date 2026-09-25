@@ -28,9 +28,16 @@ export function RequirementSummary({ requirements }: { requirements: UserRequire
     },
     {
       label: 'Colour preferences',
-      value: requirements.colour_preferences.length
-        ? requirements.colour_preferences.join(', ')
-        : 'Not specified',
+      value: (() => {
+        const colours = [
+          ...requirements.colour_preferences,
+          ...(requirements.identified_items ?? [])
+            .filter((i) => i.role === 'requested' && i.colour)
+            .map((i) => i.colour as string),
+        ];
+        const unique = Array.from(new Set(colours.map((c) => c.toLowerCase())));
+        return unique.length ? unique.join(', ') : 'Not specified';
+      })(),
     },
     {
       label: 'Excluded colours',

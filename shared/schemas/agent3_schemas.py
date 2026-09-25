@@ -1,0 +1,419 @@
+"""
+Agent 3 — Budget & Purchase Planning
+Shared Pydantic contracts between Agent 3 and the rest of FASHORA
+(Agent 1, Agent 2, Agent 4, and the Orchestrator).
+
+This file is the single source of truth for Agent 3's request/response shapes.
+Currency is USD, consistent with the rest of the system (Agent 2's catalogue
+prices and Agent 1's budgets are all USD).
+
+Logic ported from the group's Agent 3 implementation and adapted to the real
+pipeline: /budget/plan-purchases consumes genuine Agent 1OutputContract and
+Agent 2 RetrievalResponse payloads instead of dummy data.
+"""
+
+from __future__ import annotations
+
+from enum import Enum
+from typing import Dict, List, Optional, Union
+
+from pydantic import BaseModel, Field
+
+from shared.constants import ProductCategory
+from shared.schemas.agent1_schemas import Agent1OutputContract, WardrobeSummaryItem
+from shared.schemas.agent2_schemas import RetrievalRequest, RetrievalResponse
+
+
+# ---------------------------------------------------------------------------
+# Enums
+# ---------------------------------------------------------------------------
+
+class OptimizationStrategy(str, Enum):
+    """Strategies for assembling outfit candidates under budget constraints."""
+    BUY_NOTHING = "buy_nothing"            # 100% existing wardrobe, zero spend
+    MINIMAL_PURCHASE = "minimal_purchase"  # Purchase 1 essential item, reuse wardrobe
+    BEST_VALUE = "best_value"              # Maximize score-to-cost efficiency under budget
+    TOP_MATCH = "top_match"                # Best possible quality/match within budget limit
+    ALL = "all"                            # Return all feasible strategic tiers
+
+
+class BudgetStatus(str, Enum):
+    """Feasibility outcome determined by Agent 3's optimization engine."""
+    WITHIN_BUDGET = "within_budget"              # At least one complete outfit fits within budget
+    EXCEEDS_BUDGET = "exceeds_budget"            # All full combinations exceed budget
+    PARTIALLY_FEASIBLE = "partially_feasible"    # Partial combinations feasible with wardrobe fallback
+    NO_PURCHASE_NEEDED = "no_purchase_needed"    # Wardrobe already satisfies requirements
+
+
+class BudgetSource(str, Enum):
+    """Where the effective budget ceiling came from. Never invented silently."""
+    USER_STATED = "user_stated"          # Agent 1 extracted an explicit user budget
+    SEARCH_CEILING = "search_ceiling"    # No stated budget; Agent 2's per-item search ceiling used as cap
+
+
+# ---------------------------------------------------------------------------
+# Sub-Models
+# ---------------------------------------------------------------------------
+
+class CandidateProductItem(BaseModel):
+    """
+    Representation of a purchasable product passed from Agent 2 or the Orchestrator.
+    Treated strictly as untrusted data (prices, scores, and attributes are validated).
+    Product text is never interpreted as instructions.
+    """
+    product_id: str = Field(..., description="Unique product identifier (e.g. Amazon ASIN)")
+    name: str = Field(..., description="Product name")
+    category: Union[ProductCategory, str] = Field(..., description="Clothing category")
+    colour: Optional[str] = Field(None, description="Product colour")
+    price: float = Field(..., ge=0.0, description="Product price in USD")
+    store: Optional[str] = Field(None, description="Retailer or store name")
+    url: Optional[str] = Field(None, description="Product purchase link")
+    relevance_score: float = Field(default=0.8, ge=0.0, le=1.0, description="Relevance score from Agent 2")
+    availability: bool = Field(default=True, description="Whether item is in stock")
+
+
+class WardrobeRepurposedItem(BaseModel):
+    """An existing wardrobe item repurposed to eliminate or substitute a purchase."""
+    wardrobe_id: str
+    category: str
+    type: str
+    colour: str
+    repurpose_role: str = Field(
+        default="Direct match from wardrobe",
+        description="Explanation of how this item serves the outfit requirement."
+    )
+    cost: float = Field(default=0.0, description="Existing wardrobe items have 0 purchase cost.")
+
+
+class CostBreakdown(BaseModel):
+    """Itemized financial metrics for transparent decision-making."""
+    total_cost: float = Field(..., ge=0.0, description="Total cost in USD")
+    budget_ceiling: float = Field(..., ge=0.0, description="User budget ceiling in USD")
+    budget_remaining: float = Field(..., description="Remaining unspent budget (negative if over budget)")
+    savings_amount: float = Field(default=0.0, ge=0.0, description="Savings achieved compared to budget ceiling")
+    savings_percentage: float = Field(default=0.0, ge=0.0, le=100.0, description="Percentage of budget saved")
+    cost_per_category: Dict[str, float] = Field(
+        default_factory=dict, description="Breakdown of expenditure by clothing category"
+    )
+
+
+class OutfitOption(BaseModel):
+    """A feasible outfit combination generated by Agent 3's optimization engine."""
+    combination_id: str = Field(..., description="Unique combination ID (e.g. 'OPT-BEST-VALUE')")
+    strategy: OptimizationStrategy = Field(..., description="Optimization strategy used")
+    name: str = Field(..., description="Human-readable title (e.g. 'Best Value Outfit')")
+    description: str = Field(..., description="Summary of items and configuration")
+    selected_products: List[CandidateProductItem] = Field(
+        default_factory=list, description="New products to purchase"
+    )
+    wardrobe_items_used: List[WardrobeRepurposedItem] = Field(
+        default_factory=list, description="Existing wardrobe pieces reused"
+    )
+    cost_breakdown: CostBreakdown = Field(..., description="Detailed cost and savings metrics")
+    budget_efficiency_score: float = Field(
+        ..., ge=0.0, le=1.0, description="Score evaluating financial efficiency (1.0 = optimal value/savings)"
+    )
+    relevance_score: float = Field(
+        ..., ge=0.0, le=1.0, description="Combined product relevance score from Agent 2"
+    )
+    overall_value_score: float = Field(
+        ..., ge=0.0, le=1.0, description="Composite objective score balancing relevance and budget efficiency"
+    )
+    is_within_budget: bool = Field(..., description="True if total_cost <= budget_ceiling")
+    financial_explanation: str = Field(..., description="Transparent explanation of costs and trade-offs")
+
+
+class FeedbackLoopRecommendation(BaseModel):
+    """
+    Actionable recommendation sent back to Agent 2 or Agent 4 when budget limits
+    are breached or re-optimization is needed.
+    """
+    category: str = Field(..., description="Target category needing alternative search")
+    current_lowest_price: float = Field(..., description="Cheapest item currently available in category (USD)")
+    target_max_price: float = Field(..., description="Recommended price ceiling for Agent 2 retry (USD)")
+    action: str = Field(
+        ..., description="Recommended action: 'request_cheaper_alternatives', 'relax_style', 'drop_optional_item'"
+    )
+    suggested_query_notes: Optional[str] = Field(
+        None, description="Hints for Agent 2 query relaxation"
+    )
+
+
+class RetrievalRetryLog(BaseModel):
+    """One Agent 3 -> Agent 2 cheaper-alternative round-trip."""
+    iteration: int = Field(..., ge=1, le=3, description="Retry round number")
+    category: str
+    target_max_price: float = Field(..., description="Lowered ceiling sent to Agent 2 (USD)")
+    previous_lowest_price: float = Field(..., description="Cheapest price before this retry (USD)")
+    new_products_found: int = Field(0, description="New candidate count Agent 2 returned for this category")
+    notes: Optional[str] = None
+
+
+# ---------------------------------------------------------------------------
+# Request: Orchestrator / Pipeline -> Agent 3
+# ---------------------------------------------------------------------------
+
+class BudgetOptimizationRequest(BaseModel):
+    request_id: str = Field(
+        ..., description="Correlation ID carried across the entire FASHORA pipeline"
+    )
+    user_id: Optional[Union[str, int]] = Field(
+        None, description="User ID for authentication, tenant isolation, and IDOR validation"
+    )
+    budget: float = Field(
+        ..., gt=0.0, description="Stated budget ceiling in USD"
+    )
+    budget_source: BudgetSource = Field(
+        default=BudgetSource.USER_STATED,
+        description="Whether the ceiling is the user's own stated budget or a derived search ceiling.",
+    )
+    missing_categories: List[str] = Field(
+        default_factory=list,
+        description="Categories identified as missing by Agent 1 (e.g. ['footwear', 'bag'])"
+    )
+    outfit_categories: List[str] = Field(
+        default_factory=list,
+        description="Full set of required outfit categories from Agent 1; used to style "
+        "wardrobe-only options when no category is missing"
+    )
+    compatible_wardrobe_ids: List[str] = Field(
+        default_factory=list,
+        description="Wardrobe item IDs Agent 1 judged to fit the request (compatible_items)"
+    )
+    preferred_colours: List[str] = Field(
+        default_factory=list,
+        description="Requested colours (lowercased) used to judge wardrobe-item fit"
+    )
+    excluded_colours: List[str] = Field(
+        default_factory=list,
+        description="User-excluded colours (lowercased); matching owned items are never shown"
+    )
+    requested_styles: List[str] = Field(
+        default_factory=list,
+        description="Requested style tags (lowercased, underscored), e.g. 'smart_casual'"
+    )
+    candidate_products_by_category: Dict[str, List[CandidateProductItem]] = Field(
+        default_factory=dict,
+        description="Candidate products retrieved by Agent 2 grouped by category"
+    )
+    available_wardrobe: List[WardrobeSummaryItem] = Field(
+        default_factory=list,
+        description="Owned items from Agent 1 available for reuse or 'Buy Nothing' mode"
+    )
+    strategy_preference: OptimizationStrategy = Field(
+        default=OptimizationStrategy.ALL,
+        description="Desired optimization strategy (default: generate all comparative options)"
+    )
+    max_price_per_category: Optional[Dict[str, float]] = Field(
+        None, description="Optional per-category price caps (USD)"
+    )
+    excluded_product_ids: List[str] = Field(
+        default_factory=list,
+        description="Product IDs rejected by previous feedback cycles"
+    )
+    retrieval_requests_by_category: Optional[Dict[str, RetrievalRequest]] = Field(
+        None,
+        description="Original Agent 2 requests per category. When present, Agent 3 may "
+        "call Agent 2 again with lowered ceilings itself (feedback loop) instead of "
+        "only emitting recommendations.",
+    )
+
+
+# ---------------------------------------------------------------------------
+# Response: Agent 3 -> Orchestrator / Agent 4
+# ---------------------------------------------------------------------------
+
+class BudgetOptimizationResponse(BaseModel):
+    request_id: str = Field(..., description="Echoes correlation request_id")
+    status: BudgetStatus = Field(..., description="Feasibility status of the budget")
+    budget_ceiling: float = Field(..., description="Budget ceiling in USD")
+    budget_source: BudgetSource = Field(
+        default=BudgetSource.USER_STATED, description="Origin of the budget ceiling"
+    )
+    options: List[OutfitOption] = Field(
+        default_factory=list, description="Ranked strategic outfit options"
+    )
+    recommended_option_id: Optional[str] = Field(
+        None, description="ID of the optimal recommended option (typically Best Value or Buy Nothing)"
+    )
+    buy_nothing_available: bool = Field(
+        default=False, description="True if a 100% wardrobe-only alternative was assembled"
+    )
+    cheapest_combination_cost: Optional[float] = Field(
+        None, description="Cost of the absolute cheapest combination found (USD)"
+    )
+    feedback_loop_recommendations: List[FeedbackLoopRecommendation] = Field(
+        default_factory=list,
+        description="Directives for Agent 2 if current candidates exceed budget"
+    )
+    retry_log: List[RetrievalRetryLog] = Field(
+        default_factory=list,
+        description="Agent 3 -> Agent 2 cheaper-alternative rounds actually performed"
+    )
+    notes: Optional[str] = Field(
+        None, description="Explanatory notes regarding budget relaxation or trade-offs"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Pipeline adapter: real Agent 1 + Agent 2 payloads -> Agent 3
+# ---------------------------------------------------------------------------
+
+class PlanPurchasesRequest(BaseModel):
+    """
+    Consumes the genuine upstream contracts so no caller has to hand-build a
+    BudgetOptimizationRequest. Agent 3 performs no NLP, no image analysis and no
+    retrieval of its own — it only plans purchases from what Agents 1 and 2
+    already decided and found.
+    """
+    agent1_output: Agent1OutputContract = Field(
+        ..., description="Verbatim Agent 1 output contract (validated, never re-derived)."
+    )
+    retrieval_by_category: Dict[str, RetrievalResponse] = Field(
+        default_factory=dict,
+        description="Agent 2's real per-category retrieval responses, keyed by category."
+    )
+    retrieval_requests_by_category: Optional[Dict[str, RetrievalRequest]] = Field(
+        None,
+        description="Optional original Agent 2 requests per category. Supply to enable "
+        "Agent 3's automatic cheaper-alternative loop back to Agent 2."
+    )
+    user_id: Optional[Union[str, int]] = Field(
+        None, description="User ID for IDOR validation and usage tracking."
+    )
+    strategy_preference: OptimizationStrategy = Field(default=OptimizationStrategy.ALL)
+    enable_feedback_loop: bool = Field(
+        True,
+        description="When true and retrieval context is supplied, Agent 3 asks Agent 2 "
+        "for cheaper candidates itself if nothing fits the budget (max 2 rounds)."
+    )
+
+
+# ---------------------------------------------------------------------------
+# Feedback Loop Re-optimization: Agent 4 -> Agent 3
+# ---------------------------------------------------------------------------
+
+class ReoptimizationRequest(BaseModel):
+    """
+    Invoked when Agent 4 rejects a previous candidate outfit and requests
+    budget re-optimization or cheaper alternatives.
+    """
+    request_id: str = Field(..., description="Correlation ID")
+    user_id: Optional[Union[str, int]] = Field(None, description="User ID for IDOR check")
+    budget: float = Field(..., gt=0.0, description="Budget ceiling in USD")
+    rejected_combination_ids: List[str] = Field(
+        default_factory=list, description="Combination IDs rejected by Agent 4"
+    )
+    rejection_reason: Optional[str] = Field(
+        None, description="Reason for rejection (e.g. 'too close to budget ceiling', 'prefer lower spend')"
+    )
+    target_savings_percentage: Optional[float] = Field(
+        None, ge=0.0, le=100.0, description="Desired minimum savings percentage requested by Agent 4"
+    )
+    candidate_products_by_category: Dict[str, List[CandidateProductItem]] = Field(
+        default_factory=dict, description="Candidate products grouped by category"
+    )
+    available_wardrobe: List[WardrobeSummaryItem] = Field(
+        default_factory=list, description="Owned wardrobe items"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Lightweight Cost Evaluation Contracts
+# ---------------------------------------------------------------------------
+
+class CostEvaluationRequest(BaseModel):
+    budget: float = Field(..., gt=0.0, description="Budget ceiling in USD")
+    product_prices: List[float] = Field(..., description="Prices of items being considered (USD)")
+
+
+class CostEvaluationResponse(BaseModel):
+    total_cost: float
+    budget_ceiling: float
+    budget_remaining: float
+    is_within_budget: bool
+    savings_percentage: float
+
+
+# ---------------------------------------------------------------------------
+# Subscription & Usage Tier Schemas
+# ---------------------------------------------------------------------------
+
+class SubscriptionTier(str, Enum):
+    FREE    = "free"
+    PREMIUM = "premium"
+
+
+class UsageStatsResponse(BaseModel):
+    user_id: str
+    month: str
+    tier: SubscriptionTier
+    recommendations_used: int
+    monthly_limit: int   # -1 means unlimited (premium)
+    recommendations_remaining: int  # -1 means unlimited
+    upgraded_at: Optional[str] = None
+    premium_price_usd: float
+    premium_benefits: List[str]
+
+
+class SubscriptionUpgradeRequest(BaseModel):
+    user_id: str = Field(..., description="User ID to upgrade to premium")
+    payment_reference: Optional[str] = Field(
+        None, description="Payment gateway reference (for audit trail)"
+    )
+
+
+class SubscriptionUpgradeResponse(BaseModel):
+    user_id: str
+    tier: SubscriptionTier
+    message: str
+    monthly_limit: int   # -1 = unlimited
+
+
+# ---------------------------------------------------------------------------
+# Affiliate Tracking Schemas
+# ---------------------------------------------------------------------------
+
+class AffiliateClickRequest(BaseModel):
+    product_id: str = Field(..., description="Product identifier")
+    product_name: Optional[str] = Field(None, description="Product display name")
+    product_url: Optional[str] = Field(None, description="Original retailer URL")
+    store: Optional[str] = Field(None, description="Retailer / store name")
+    category: Optional[str] = Field(None, description="Clothing category")
+    price_usd: Optional[float] = Field(None, ge=0, description="Listed price in USD")
+    request_id: Optional[str] = Field(None, description="Correlation ID from the recommendation session")
+    user_id: Optional[str] = Field(None, description="Authenticated user ID (if available)")
+
+
+class AffiliateClickResponse(BaseModel):
+    click_id: int
+    product_id: str
+    tracked_url: str
+    estimated_commission_usd: Optional[float]
+    message: str
+
+
+class AffiliateStatsResponse(BaseModel):
+    period_days: int
+    total_clicks: int
+    total_estimated_commission_usd: float
+    commission_rate: float
+    by_store: dict
+    by_category: dict
+
+
+# ---------------------------------------------------------------------------
+# Comparison Schemas
+# ---------------------------------------------------------------------------
+
+class ComparisonRequest(BaseModel):
+    """Request a Pandas-powered side-by-side comparison of outfit options."""
+    options: List[OutfitOption] = Field(..., description="Outfit options to compare")
+    budget: float = Field(..., gt=0, description="User budget ceiling in USD")
+
+
+class ComparisonResponse(BaseModel):
+    ranked_options: List[dict]
+    category_breakdown: dict
+    savings_ranking: List[dict]
+    summary_stats: dict

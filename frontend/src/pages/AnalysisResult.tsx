@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { RequirementSummary } from '../components/RequirementSummary';
 import { MissingItemsBadge } from '../components/MissingItemsBadge';
 import { CompatibilityMeter } from '../components/CompatibilityMeter';
@@ -10,13 +10,21 @@ import { getAnalysis } from '../services/analysisService';
 import { searchFromAgent1Handoff } from '../services/agent2Service';
 import { statusMeta, describeHttpError } from '../services/agent2Format';
 import { recordRecentSearch } from '../services/agent2History';
+import { planPurchases } from '../services/budgetService';
+import { cachePlan, readCachedPlan, savePlanRef } from '../services/budgetHistory';
+import { planErrorText } from '../components/budget/OutfitOptionCard';
+import { useAuth } from '../context/AuthContext';
 import { ProductCard } from '../components/ProductCard';
 import { extractErrorMessage, imageUrl } from '../services/api';
 import type { FashionAnalysisResponse } from '../types';
 import type { HandoffRetrievalResponse } from '../types/agent2';
+import type { BudgetOptimizationResponse } from '../types/budget';
+import type { RetrievalRequest, RetrievalResponse } from '../types/agent2';
 
 export function AnalysisResult() {
   const { requestId } = useParams();
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [data, setData] = useState<FashionAnalysisResponse | null>(null);
   const [tab, setTab] = useState<'overview' | 'handoff'>('overview');
   const [error, setError] = useState('');
@@ -24,6 +32,10 @@ export function AnalysisResult() {
   const [handoff, setHandoff] = useState<HandoffRetrievalResponse | null>(null);
   const [handoffLoading, setHandoffLoading] = useState(false);
   const [handoffError, setHandoffError] = useState('');
+  const [planLoading, setPlanLoading] = useState(false);
+  const [planError, setPlanError] = useState('');
+  const [aiExplanations, setAiExplanations] = useState(false);
+  const [hasSavedPlan, setHasSavedPlan] = useState(false);
 
   useEffect(() => {
     if (!requestId) return;
@@ -72,6 +84,52 @@ export function AnalysisResult() {
       setHandoffError(status ? describeHttpError(status) : extractErrorMessage(err));
     } finally {
       setHandoffLoading(false);
+    }
+  };
+
+  // A plan is user-initiated (each one counts against the monthly limit), so
+  // it never auto-runs; if one is already cached for this request, link to it.
+  useEffect(() => {
+    if (!requestId) return;
+    setHasSavedPlan(readCachedPlan<BudgetOptimizationResponse>(requestId) !== null);
+  }, [requestId]);
+
+  const buildPlan = async () => {
+    if (!data?.agent2_handoff) return;
+    setPlanLoading(true);
+    setPlanError('');
+    try {
+      const retrieval_by_category: Record<string, RetrievalResponse> = {};
+      const retrieval_requests_by_category: Record<string, RetrievalRequest> = {};
+      (handoff?.retrievals ?? []).forEach((r) => {
+        if (r.response) retrieval_by_category[r.category] = r.response;
+        if (r.request) retrieval_requests_by_category[r.category] = r.request;
+      });
+      const plan = await planPurchases(
+        {
+          agent1_output: data.raw_agent1_contract,
+          retrieval_by_category,
+          retrieval_requests_by_category:
+            Object.keys(retrieval_requests_by_category).length > 0
+              ? retrieval_requests_by_category
+              : null,
+          user_id: user?.id ?? null,
+        },
+        aiExplanations
+      );
+      cachePlan(data.request_id, plan);
+      savePlanRef({
+        request_id: data.request_id,
+        at: new Date().toISOString(),
+        query_label: data.input_text.slice(0, 60),
+        budget_ceiling: plan.budget_ceiling,
+        status: plan.status,
+      });
+      navigate(`/budget/${encodeURIComponent(data.request_id)}`);
+    } catch (err) {
+      setPlanError(planErrorText(err));
+    } finally {
+      setPlanLoading(false);
     }
   };
 
@@ -270,6 +328,7 @@ export function AnalysisResult() {
           )}
 
           {!needsClarification && (
+          <>
           <div className="panel stack">
             <div className="row" style={{ justifyContent: 'space-between' }}>
               <h2 style={{ margin: 0 }}>Find products</h2>
@@ -341,6 +400,39 @@ export function AnalysisResult() {
               </div>
             )}
           </div>
+
+          <div className="panel stack">
+            <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+              <h2 style={{ margin: 0 }}>Budget plan</h2>
+              <div className="row" style={{ gap: 10, alignItems: 'center' }}>
+                <button
+                  type="button"
+                  className={`chip ${aiExplanations ? 'active' : ''}`}
+                  onClick={() => setAiExplanations(!aiExplanations)}
+                >
+                  AI explanations
+                </button>
+                {hasSavedPlan && (
+                  <Link
+                    className="btn btn-secondary"
+                    to={`/budget/${encodeURIComponent(data.request_id)}`}
+                  >
+                    Open saved plan
+                  </Link>
+                )}
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => void buildPlan()}
+                  disabled={planLoading || !data.agent2_handoff}
+                >
+                  {planLoading ? 'Planning…' : 'Build budget plan'}
+                </button>
+              </div>
+            </div>
+            <ErrorAlert message={planError} />
+          </div>
+          </>
           )}
         </div>
       )}

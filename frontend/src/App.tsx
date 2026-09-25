@@ -14,6 +14,8 @@ import { Agent2Search } from './pages/agent2/Agent2Search';
 import { Agent2ProductDetail } from './pages/agent2/Agent2ProductDetail';
 import { Agent2History } from './pages/agent2/Agent2History';
 import { Agent2StatusPage } from './pages/agent2/Agent2Status';
+import { BudgetPlanPage } from './pages/budget/BudgetPlanPage';
+import { BudgetAccountPage } from './pages/budget/BudgetAccountPage';
 import { Settings } from './pages/Settings';
 import { SecurityLab } from './pages/SecurityLab';
 import { LoadingSkeleton } from './components/LoadingSkeleton';
@@ -50,6 +52,8 @@ export default function App() {
             <Route path="/agent2/products/:productId" element={<Agent2ProductDetail />} />
             <Route path="/agent2/history" element={<Agent2History />} />
             <Route path="/agent2/status" element={<Agent2StatusPage />} />
+            <Route path="/budget" element={<BudgetAccountPage />} />
+            <Route path="/budget/:requestId" element={<BudgetPlanPage />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/security" element={<SecurityLab />} />
           </Route>
