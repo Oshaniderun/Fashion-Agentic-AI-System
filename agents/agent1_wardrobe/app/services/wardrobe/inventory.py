@@ -44,9 +44,19 @@ class WardrobeInventoryService:
 
     def create_item(self, db: Session, user_id: int, item_in: WardrobeItemCreate) -> WardrobeItem:
         """Creates and stores a confirmed wardrobe item."""
-        # Generate next code like W001, W002
-        count = db.query(WardrobeItem).filter(WardrobeItem.user_id == user_id).count()
-        code = f"W{count + 1:03d}"
+        # Generate next code like W001, W002. Derived from the highest existing
+        # code (not the row count) so deleting an item never reuses a code.
+        existing_codes = [
+            row[0]
+            for row in db.query(WardrobeItem.wardrobe_code)
+            .filter(WardrobeItem.user_id == user_id)
+            .all()
+        ]
+        numbers = [
+            int(c[1:]) for c in existing_codes
+            if c and c.startswith("W") and c[1:].isdigit()
+        ]
+        code = f"W{max(numbers, default=0) + 1:03d}"
 
         db_item = WardrobeItem(
             wardrobe_code=code,
