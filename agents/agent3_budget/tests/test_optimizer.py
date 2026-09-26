@@ -72,6 +72,25 @@ def test_money_math_is_exact_usd():
     assert "LKR" not in opt.financial_explanation
 
 
+def test_purchase_options_fill_required_categories_from_wardrobe():
+    """Required categories already owned (not in `missing`) must still be
+    attached as wardrobe items so the plan represents a complete outfit."""
+    resp = get_optimizer_service().optimize(
+        make_req(
+            missing_categories=["top"],
+            outfit_categories=["top", "footwear"],
+            candidate_products_by_category={"top": [cand("P3", "top", 30.0, 0.9)]},
+            compatible_wardrobe_ids=["W002"],
+        )
+    )
+    assert resp.options
+    for opt in resp.options:
+        used = {w.wardrobe_id for w in opt.wardrobe_items_used}
+        assert "W002" in used, opt.combination_id
+    bv = next(o for o in resp.options if o.combination_id == "OPT-BEST-VALUE")
+    assert bv.cost_breakdown.total_cost == 30.0  # wardrobe pieces cost 0
+
+
 def test_exceeds_budget_triggers_feedback_directives():
     resp = get_optimizer_service().optimize(make_req(budget=10.0, available_wardrobe=[]))
     assert resp.status == BudgetStatus.EXCEEDS_BUDGET

@@ -48,3 +48,23 @@ export function readCachedPlan<T>(requestId: string): T | null {
     return null;
   }
 }
+
+// The per-category retrieval responses used to build a plan. The final-outfit
+// step cross-checks every purchased product against them, so they are cached
+// with the plan (session-scoped, never fabricated on read).
+export function cacheRetrievalContext(requestId: string, context: unknown) {
+  try {
+    sessionStorage.setItem(`retrieval:${requestId}`, JSON.stringify(context));
+  } catch {
+    /* storage unavailable */
+  }
+}
+
+export function readRetrievalContext<T>(requestId: string): T | null {
+  try {
+    const raw = sessionStorage.getItem(`retrieval:${requestId}`);
+    return raw ? (JSON.parse(raw) as T) : null;
+  } catch {
+    return null;
+  }
+}

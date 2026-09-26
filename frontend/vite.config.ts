@@ -21,6 +21,10 @@ export default defineConfig({
         bypass: (req) =>
           req.headers.accept?.includes('text/html') ? '/index.html' : undefined,
       },
+      '/decision': {
+        target: 'http://127.0.0.1:8004',
+        changeOrigin: true,
+      },
       '/health': {
         target: 'http://127.0.0.1:8002',
         changeOrigin: true,

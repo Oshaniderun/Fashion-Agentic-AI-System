@@ -11,7 +11,7 @@ import { searchFromAgent1Handoff } from '../services/agent2Service';
 import { statusMeta, describeHttpError } from '../services/agent2Format';
 import { recordRecentSearch } from '../services/agent2History';
 import { planPurchases } from '../services/budgetService';
-import { cachePlan, readCachedPlan, savePlanRef } from '../services/budgetHistory';
+import { cachePlan, cacheRetrievalContext, readCachedPlan, savePlanRef } from '../services/budgetHistory';
 import { planErrorText } from '../components/budget/OutfitOptionCard';
 import { useAuth } from '../context/AuthContext';
 import { ProductCard } from '../components/ProductCard';
@@ -118,6 +118,7 @@ export function AnalysisResult() {
         aiExplanations
       );
       cachePlan(data.request_id, plan);
+      cacheRetrievalContext(data.request_id, retrieval_by_category);
       savePlanRef({
         request_id: data.request_id,
         at: new Date().toISOString(),

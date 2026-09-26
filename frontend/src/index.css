@@ -360,6 +360,11 @@ h3,
   color: var(--accent-deep);
 }
 
+.chip:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 .badge {
   display: inline-flex;
   align-items: center;
@@ -609,4 +614,59 @@ h3,
   .grid-stats {
     grid-template-columns: 1fr 1fr;
   }
+}
+
+.score-box {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 8px 12px;
+  background: var(--surface);
+}
+
+.score-row {
+  gap: 10px;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+.score-row .meta:first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.score-row .meta:last-child {
+  width: 34px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.score-row .score-bar {
+  flex: 0 1 140px;
+  min-width: 36px;
+}
+
+.score-bar {
+  display: inline-block;
+  flex: 1;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--line);
+  overflow: hidden;
+}
+
+.score-box > div > .score-bar {
+  display: block;
+  margin: 4px 0 12px;
+}
+
+.score-bar-compact {
+  max-width: 160px;
+  height: 6px;
+}
+
+.score-bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--accent);
 }

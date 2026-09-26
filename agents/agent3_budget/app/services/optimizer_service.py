@@ -51,6 +51,11 @@ class BudgetOptimizerService:
             excluded_colours=[c.lower().strip() for c in request.excluded_colours],
             styles=[s.lower().strip().replace(" ", "_") for s in request.requested_styles],
         )
+        # The finished outfit must cover every required category; the wardrobe
+        # fills categories the purchased products don't (not just "missing" ones).
+        required_categories = (
+            [c.lower().strip() for c in request.outfit_categories] or missing_categories
+        )
 
         # Wardrobe already satisfies every requirement
         if not missing_categories:
@@ -147,6 +152,7 @@ class BudgetOptimizerService:
                 wardrobe=wardrobe,
                 missing_categories=missing_categories,
                 criteria=criteria,
+                required_categories=required_categories,
             )
             options.append(best_value_opt)
 
@@ -171,6 +177,7 @@ class BudgetOptimizerService:
                     wardrobe=wardrobe,
                     missing_categories=missing_categories,
                     criteria=criteria,
+                    required_categories=required_categories,
                 )
                 options.append(top_match_opt)
 
@@ -191,6 +198,7 @@ class BudgetOptimizerService:
                         wardrobe=wardrobe,
                         missing_categories=missing_categories,
                         criteria=criteria,
+                        required_categories=required_categories,
                     )
                     options.append(minimal_opt)
 
@@ -259,9 +267,11 @@ class BudgetOptimizerService:
         wardrobe: List[WardrobeSummaryItem],
         missing_categories: List[str],
         criteria: Optional[WardrobeFitCriteria] = None,
+        required_categories: Optional[List[str]] = None,
     ) -> OutfitOption:
         purchased_categories = {p.category.lower().strip() for p in products}
-        still_needed = [c for c in missing_categories if c not in purchased_categories]
+        fill_from = required_categories if required_categories is not None else missing_categories
+        still_needed = [c for c in fill_from if c not in purchased_categories]
         repurposed_wardrobe: List[WardrobeRepurposedItem] = [
             WardrobeRepurposedItem(
                 wardrobe_id=w.wardrobe_id,

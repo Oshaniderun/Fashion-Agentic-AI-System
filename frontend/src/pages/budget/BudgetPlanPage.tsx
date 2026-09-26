@@ -4,13 +4,14 @@ import { useAuth } from '../../context/AuthContext';
 import { LoadingSkeleton } from '../../components/LoadingSkeleton';
 import { ErrorAlert } from '../../components/ErrorAlert';
 import { OutfitOptionCard, PlanStatusBanner } from '../../components/budget/OutfitOptionCard';
+import { FinalOutfitPanel } from '../../components/budget/FinalOutfitPanel';
 import { readCachedPlan } from '../../services/budgetHistory';
 import { compareOptions, type ComparisonResult } from '../../services/budgetService';
 import { formatUsd, strategyLabel } from '../../services/budgetFormat';
 import { extractErrorMessage } from '../../services/api';
 import type { BudgetOptimizationResponse } from '../../types/budget';
 
-type Tab = 'options' | 'comparison';
+type Tab = 'options' | 'comparison' | 'outfit';
 
 export function BudgetPlanPage() {
   const { requestId } = useParams();
@@ -86,6 +87,13 @@ export function BudgetPlanPage() {
         >
           Comparison
         </button>
+        <button
+          type="button"
+          className={`chip ${tab === 'outfit' ? 'active' : ''}`}
+          onClick={() => setTab('outfit')}
+        >
+          Final outfit
+        </button>
       </div>
 
       {tab === 'options' && (
@@ -119,6 +127,8 @@ export function BudgetPlanPage() {
           </p>
         </div>
       )}
+
+      {tab === 'outfit' && <FinalOutfitPanel requestId={plan.request_id} userId={user?.id ?? null} />}
 
       {tab === 'comparison' && (
         <div className="panel stack">

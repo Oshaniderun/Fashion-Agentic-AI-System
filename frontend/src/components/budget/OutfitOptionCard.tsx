@@ -21,7 +21,7 @@ interface Props {
 
 /** One outfit option: cost breakdown, purchased products, reused wardrobe. */
 export function OutfitOptionCard({ requestId, userId, option, recommended }: Props) {
-  const [open, setOpen] = useState(recommended);
+  const [open, setOpen] = useState(false);
   const cb = option.cost_breakdown;
 
   const openTracked = async (p: CandidateProductItem) => {
