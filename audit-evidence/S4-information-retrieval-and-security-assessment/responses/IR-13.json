@@ -1,0 +1,13 @@
+{
+  "test_id": "IR-13",
+  "timestamp_utc": "2026-09-28T16:25:01.569025+00:00",
+  "objective": "Poisoned-product-data surface: catalogue must be read-only to API clients",
+  "expected_behaviour": "POST/PUT/DELETE on /products rejected",
+  "actual_behaviour": "catalogue write/delete probes: {'POST /api/v1/products': 404, 'PUT /api/v1/products/B09J3CQSVL': 405, 'DELETE /api/v1/products/B09J3CQSVL': 405} (want 404/405 \u2014 read-only catalogue)",
+  "leak_markers_found": [],
+  "response": {
+    "POST /api/v1/products": 404,
+    "PUT /api/v1/products/B09J3CQSVL": 405,
+    "DELETE /api/v1/products/B09J3CQSVL": 405
+  }
+}

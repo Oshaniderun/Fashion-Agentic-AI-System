@@ -2,7 +2,7 @@
 FastAPI route definitions for Agent 2 (Fashion Information Retrieval).
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from typing import List, Optional
 
@@ -12,6 +12,8 @@ from app.repositories.product_repository import ProductRepository
 from app.api.dependencies import get_db, require_auth
 from app.decision_logic import resolve_retrieval
 from app.core.config import get_settings
+from app.services import history_service
+from app.services.retrieval_service import get_retrieval_service
 
 from app.core.security import sanitize_input_text
 
@@ -46,7 +48,8 @@ def health_check():
 )
 def retrieve_products(
     request: RetrievalRequest,
-    auth: dict = Depends(require_auth)
+    auth: dict = Depends(require_auth),
+    db: Session = Depends(get_db),
 ) -> RetrievalResponse:
     # Security checks on boundaries
     if request.top_k > 20 or request.top_k < 1:
@@ -91,6 +94,7 @@ def retrieve_products(
         ]
 
     response = resolve_retrieval(request)
+    history_service.record_search(db, auth, request, response, source="search")
     return response
 
 @router.get(
@@ -112,3 +116,94 @@ def get_product(
             detail=f"Product with ID '{product_id}' not found."
         )
     return prod
+
+
+# ---------------------------------------------------------------------------
+# Search history (user-scoped)
+# ---------------------------------------------------------------------------
+
+def _require_user(auth: dict) -> str:
+    user_id = history_service.user_id_from_auth(auth)
+    if not user_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Search history is only available to authenticated users.",
+        )
+    return user_id
+
+
+HISTORY_PRODUCT_FIELDS = (
+    "product_id", "product_name", "brand", "category", "price", "currency",
+    "colour", "style", "store", "image_url", "product_url", "availability",
+)
+
+
+def _history_products(product_ids: List[str]) -> List[dict]:
+    catalogue = get_retrieval_service().products
+    out = []
+    for pid in product_ids:
+        prod = catalogue.get(pid)
+        if prod:
+            out.append({k: prod.get(k) for k in HISTORY_PRODUCT_FIELDS})
+    return out
+
+
+@router.get(
+    "/api/v1/history",
+    tags=["History"],
+    summary="List your past searches (newest first)",
+)
+def list_search_history(
+    limit: int = Query(50, ge=1, le=200),
+    db: Session = Depends(get_db),
+    auth: dict = Depends(require_auth),
+):
+    user_id = _require_user(auth)
+    return {"entries": history_service.list_history(db, user_id, limit)}
+
+
+@router.get(
+    "/api/v1/history/{history_id}",
+    tags=["History"],
+    summary="One search with its retrieved products resolved from the catalogue",
+)
+def get_search_history_entry(
+    history_id: int,
+    db: Session = Depends(get_db),
+    auth: dict = Depends(require_auth),
+):
+    user_id = _require_user(auth)
+    entry = history_service.get_history_entry(db, user_id, history_id)
+    if not entry:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="History entry not found.")
+    entry["products"] = _history_products(entry.pop("product_ids", []))
+    return entry
+
+
+@router.delete(
+    "/api/v1/history",
+    tags=["History"],
+    summary="Delete all your search history",
+)
+def clear_search_history(
+    db: Session = Depends(get_db),
+    auth: dict = Depends(require_auth),
+):
+    user_id = _require_user(auth)
+    return {"deleted": history_service.clear_history(db, user_id)}
+
+
+@router.delete(
+    "/api/v1/history/{history_id}",
+    tags=["History"],
+    summary="Delete one search history entry",
+)
+def delete_search_history_entry(
+    history_id: int,
+    db: Session = Depends(get_db),
+    auth: dict = Depends(require_auth),
+):
+    user_id = _require_user(auth)
+    if not history_service.delete_history_entry(db, user_id, history_id):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="History entry not found.")
+    return {"deleted": history_id}

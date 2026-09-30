@@ -1,0 +1,11 @@
+{
+  "test_id": "IR-18",
+  "timestamp_utc": "2026-09-28T16:25:18.678356+00:00",
+  "objective": "Inter-agent transport security (config evidence)",
+  "expected_behaviour": "Plaintext HTTP documented for loopback",
+  "actual_behaviour": "A3->A2 base URL config line: 'AGENT2_BASE_URL: str = \"http://127.0.0.1:8002\"'; plaintext HTTP (no TLS): True \u2014 acceptable on loopback dev, must be reconsidered for any networked deployment",
+  "leak_markers_found": [],
+  "response": {
+    "config_line": "AGENT2_BASE_URL: str = \"http://127.0.0.1:8002\""
+  }
+}

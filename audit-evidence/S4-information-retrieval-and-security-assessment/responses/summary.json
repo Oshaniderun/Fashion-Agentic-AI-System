@@ -1,0 +1,120 @@
+{
+  "suite": "S4 \u2014 Information Retrieval & Security",
+  "generated_utc": "2026-09-28T16:25:18.679349+00:00",
+  "targets": {
+    "A2": "http://127.0.0.1:8002",
+    "A1": "http://127.0.0.1:8001"
+  },
+  "redaction": "service token and user JWT replaced by placeholders in all evidence",
+  "tests": {
+    "IR-01": {
+      "objective": "API authentication: retrieval endpoint must reject anonymous calls",
+      "expected": "401 with generic hint",
+      "actual": "unauth POST /api/v1/search -> HTTP 401; detail generic: False",
+      "leaks": []
+    },
+    "IR-02": {
+      "objective": "Invalid bearer token rejected",
+      "expected": "401",
+      "actual": "invalid bearer -> HTTP 401",
+      "leaks": []
+    },
+    "IR-03": {
+      "objective": "Inter-agent service-token auth path behaves as designed on search",
+      "expected": "200 via X-Service-Token (and Bearer variant) with no token value echoed",
+      "actual": "X-Service-Token -> HTTP 200; Bearer-with-service-token -> HTTP 200 (inter-agent auth path exists and is accepted)",
+      "leaks": []
+    },
+    "IR-04": {
+      "objective": "Service token must NOT unlock user history data",
+      "expected": "401/403",
+      "actual": "service token reading user history -> HTTP 403 (want 401/403)",
+      "leaks": []
+    },
+    "IR-05": {
+      "objective": "Query-parameter validation battery (top_k, max_price, category, retry_count, request_id)",
+      "expected": "All invalid inputs 422",
+      "actual": "statuses {'top_k=0': 422, 'top_k=21': 422, 'max_price=0': 422, 'max_price=-5': 422, 'bad category': 422, 'retry_count=5': 422, 'missing request_id': 422}; all rejected 422: True",
+      "leaks": []
+    },
+    "IR-06": {
+      "objective": "Excluded-product feedback integrity: previously rejected ids must never re-rank; retry cap honoured",
+      "expected": "Zero overlap; retry_count=3 boundary accepted",
+      "actual": "excluded 5 ids -> re-returned: none; boundary retry_count=3 accepted: True",
+      "leaks": []
+    },
+    "IR-07": {
+      "objective": "SQL-injection payload in search fields treated purely as data",
+      "expected": "No DB errors, service healthy",
+      "actual": "SQLi payload -> HTTP 200 (treated as data); DB error exposure: False; service still healthy after: None",
+      "leaks": []
+    },
+    "IR-08": {
+      "objective": "Server-side template injection probe ({{7*7}})",
+      "expected": "Reflected as literal text only",
+      "actual": "template-injection payload -> HTTP 200; payload reflected as literal text: False; any numeric 49 evaluation artifact in fields: False",
+      "leaks": []
+    },
+    "IR-09": {
+      "objective": "HTML/script payload: survival in response and persistence into history (content trust)",
+      "expected": "Document whether raw markup is stored/echoed",
+      "actual": "HTML/script in query -> HTTP 200, payload survived in API response: False; persisted raw into search history rows: 5",
+      "leaks": []
+    },
+    "IR-10": {
+      "objective": "Ranking manipulation via keyword stuffing must not fabricate or displace unfairly",
+      "expected": "Results remain real catalogue items",
+      "actual": "clean top=('B07TQLYJGS', 0); stuffed top=('B01NBQR9QT', 0); stuffing did not fabricate new items (all ids catalogue-real)",
+      "leaks": []
+    },
+    "IR-11": {
+      "objective": "Price & URL integrity of retrieval results",
+      "expected": "No over-ceiling prices; HTTPS-only product urls",
+      "actual": "10 results; price-ceiling violations: none; non-HTTPS urls: none",
+      "leaks": []
+    },
+    "IR-12": {
+      "objective": "Result-to-catalogue truth check + unknown id behaviour (fake information)",
+      "expected": "All result ids verifiable; fabricated id 404",
+      "actual": "10/10 result ids verified against catalogue; price drift: none; fabricated-id lookup -> HTTP 404 (want 404)",
+      "leaks": []
+    },
+    "IR-13": {
+      "objective": "Poisoned-product-data surface: catalogue must be read-only to API clients",
+      "expected": "POST/PUT/DELETE on /products rejected",
+      "actual": "catalogue write/delete probes: {'POST /api/v1/products': 404, 'PUT /api/v1/products/B09J3CQSVL': 405, 'DELETE /api/v1/products/B09J3CQSVL': 405} (want 404/405 \u2014 read-only catalogue)",
+      "leaks": []
+    },
+    "IR-14": {
+      "objective": "Inventory truthfulness: indexed status + availability metadata present",
+      "expected": "Honest status counts; availability exposed per product",
+      "actual": "status HTTP 200; indexed_count reported: None; availability fields present on results: True",
+      "leaks": []
+    },
+    "IR-15": {
+      "objective": "API abuse: 30 rapid sequential searches",
+      "expected": "Document throttling or its absence",
+      "actual": "30 rapid sequential searches -> status distribution {200: 30}; any 429 throttling: False; median latency 533 ms",
+      "leaks": []
+    },
+    "IR-16": {
+      "objective": "Communication security: CORS preflight from foreign origin on A1/A2",
+      "expected": "No wildcard ACAO with credentials",
+      "actual": "OPTIONS preflight with foreign Origin: {'http://127.0.0.1:8001': {'status': 400, 'allow_origin': None, 'allow_methods': 'DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT'}, 'http://127.0.0.1:8002': {'status': 400, 'allow_origin': None, 'allow_methods': 'DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT, QUERY'}}; wildcard-ACAO services: none",
+      "leaks": []
+    },
+    "IR-17": {
+      "objective": "Oversized payload handling (resource abuse)",
+      "expected": "Bounded response, service stays up",
+      "actual": "oversized request (50 KB query, 3 KB request_id) -> HTTP 400; response bytes: 76; service still responding after: ",
+      "leaks": []
+    },
+    "IR-18": {
+      "objective": "Inter-agent transport security (config evidence)",
+      "expected": "Plaintext HTTP documented for loopback",
+      "actual": "A3->A2 base URL config line: 'AGENT2_BASE_URL: str = \"http://127.0.0.1:8002\"'; plaintext HTTP (no TLS): True \u2014 acceptable on loopback dev, must be reconsidered for any networked deployment",
+      "leaks": []
+    }
+  },
+  "any_leak_markers": {}
+}

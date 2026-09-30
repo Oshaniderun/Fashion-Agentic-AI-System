@@ -1,0 +1,14 @@
+{
+  "test_id": "PR-01",
+  "timestamp_utc": "2026-09-28T15:50:06.057869+00:00",
+  "objective": "Auth response hygiene: /api/auth/me must return profile without credential fields",
+  "expected_behaviour": "200 with id/name/email/created_at only; no password/hash/token fields",
+  "actual_behaviour": "200; profile fields=['created_at', 'email', 'id', 'name']; secret-bearing fields=none",
+  "leak_markers_found": [],
+  "response": {
+    "id": 1,
+    "name": "Triveni",
+    "email": "trivtheaver@gmail.com",
+    "created_at": "2026-09-21T11:22:31.046598"
+  }
+}

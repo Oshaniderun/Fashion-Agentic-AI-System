@@ -1,0 +1,14 @@
+{
+  "test_id": "PR-02",
+  "timestamp_utc": "2026-09-28T15:50:06.073471+00:00",
+  "objective": "Session scoping: audit user B authenticates and sees only own identity",
+  "expected_behaviour": "200 with B's email, not user 1's",
+  "actual_behaviour": "HTTP 200; B sees only own profile: True; body email=audit.b.1790610596@example.com",
+  "leak_markers_found": [],
+  "response": {
+    "id": 6,
+    "name": "Audit Subject B",
+    "email": "audit.b.1790610596@example.com",
+    "created_at": "2026-09-28T21:19:57.225803"
+  }
+}

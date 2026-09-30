@@ -1,0 +1,15 @@
+{
+  "test_id": "PR-16",
+  "timestamp_utc": "2026-09-28T15:50:07.241662+00:00",
+  "objective": "Credential storage: audit user B password persisted as bcrypt hash, never plaintext",
+  "expected_behaviour": "Stored value starts with bcrypt prefix; plaintext not present in column",
+  "actual_behaviour": "stored hash prefix=$2b$; bcrypt=True; length=60; plaintext present: False",
+  "leak_markers_found": [],
+  "response": {
+    "bcrypt_prefix": "$2b$12$",
+    "hash_length": 60,
+    "is_bcrypt": true,
+    "plaintext_stored": false,
+    "_note": "Full hash intentionally not written to evidence."
+  }
+}

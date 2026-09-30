@@ -1,0 +1,51 @@
+{
+  "test_id": "RA-14",
+  "timestamp_utc": "2026-09-28T16:11:09.405046+00:00",
+  "objective": "Buy-Nothing coverage claims: does Agent 3 explain honestly which needs it covers?",
+  "expected_behaviour": "Claims must match picked/available items (known defect check)",
+  "actual_behaviour": "BUY-NOTHING option present; description='100% sustainable combination utilizing your existing wardrobe: red blouse. Zero additional purchase cost.'; reuses 1 wardrobe items covering categories ['top']; MISSING categories still needed=['bag', 'outerwear']; NOT covered by the reuse: ['bag', 'outerwear']",
+  "leak_markers_found": [],
+  "response": {
+    "buy_nothing_option": {
+      "combination_id": "OPT-BUY-NOTHING",
+      "strategy": "buy_nothing",
+      "name": "Sustainable 'Buy Nothing' Mode",
+      "description": "100% sustainable combination utilizing your existing wardrobe: red blouse. Zero additional purchase cost.",
+      "selected_products": [],
+      "wardrobe_items_used": [
+        {
+          "wardrobe_id": "W003",
+          "category": "top",
+          "type": "blouse",
+          "colour": "red",
+          "repurpose_role": "Repurposed owned red blouse in place of purchasing outerwear",
+          "cost": 0.0
+        }
+      ],
+      "cost_breakdown": {
+        "total_cost": 0.0,
+        "budget_ceiling": 700.0,
+        "budget_remaining": 700.0,
+        "savings_amount": 700.0,
+        "savings_percentage": 100.0,
+        "cost_per_category": {
+          "bag": 0.0,
+          "outerwear": 0.0
+        }
+      },
+      "budget_efficiency_score": 1.0,
+      "relevance_score": 0.82,
+      "overall_value_score": 0.91,
+      "is_within_budget": true,
+      "financial_explanation": "Buy Nothing Mode: the outfit requirement can be fulfilled without spending any money by restyling your existing 1 wardrobe item(s) (red blouse). This preserves 100% of your USD 700.00 budget."
+    },
+    "missing_categories": [
+      "bag",
+      "outerwear"
+    ],
+    "uncovered": [
+      "bag",
+      "outerwear"
+    ]
+  }
+}

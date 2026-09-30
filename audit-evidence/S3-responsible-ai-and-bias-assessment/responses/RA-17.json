@@ -1,0 +1,19 @@
+{
+  "test_id": "RA-17",
+  "timestamp_utc": "2026-09-28T16:11:10.784217+00:00",
+  "objective": "Honest nulls/no fabricated products for nonsensical retrieval query",
+  "expected_behaviour": "Only genuine catalogue ids returned",
+  "actual_behaviour": "nonsense query: results returned=5, all genuine catalogue items: True (no fabricated products)",
+  "leak_markers_found": [],
+  "response": {
+    "n_results": 5,
+    "verified": 5,
+    "ids": [
+      "B091YL25XC",
+      "B091K4DDDC",
+      "B01MAZK9N2",
+      "B08LNNWT9G",
+      "B00T0R4U4G"
+    ]
+  }
+}

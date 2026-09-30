@@ -1,0 +1,25 @@
+{
+  "test_id": "IR-06",
+  "timestamp_utc": "2026-09-28T16:24:51.840551+00:00",
+  "objective": "Excluded-product feedback integrity: previously rejected ids must never re-rank; retry cap honoured",
+  "expected_behaviour": "Zero overlap; retry_count=3 boundary accepted",
+  "actual_behaviour": "excluded 5 ids -> re-returned: none; boundary retry_count=3 accepted: True",
+  "leak_markers_found": [],
+  "response": {
+    "round1": [
+      "B09J3CQSVL",
+      "B0921HL8JL",
+      "B073Z6Y9DZ",
+      "B0921W1918",
+      "B0753YQP2N"
+    ],
+    "round2": [
+      "B07BLRSQFN",
+      "B09SM4CFN6",
+      "B01IOX5ZIQ",
+      "B076VHQ85N",
+      "B09TLFQZ2B"
+    ],
+    "overlap": []
+  }
+}

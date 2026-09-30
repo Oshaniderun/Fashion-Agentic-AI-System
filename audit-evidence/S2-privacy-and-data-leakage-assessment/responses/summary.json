@@ -1,0 +1,128 @@
+{
+  "suite": "S2 \u2014 Privacy & Data Leakage",
+  "generated_utc": "2026-09-28T15:50:07.321719+00:00",
+  "accounts": {
+    "user_A": "existing user id 1 (JWT minted at runtime, not stored)",
+    "user_B": {
+      "email": "audit.b.1790610596@example.com",
+      "id": "6",
+      "password": "[generated at runtime, never written to evidence]"
+    }
+  },
+  "targets": {
+    "A1": "http://127.0.0.1:8001",
+    "A2": "http://127.0.0.1:8002",
+    "A3": "http://127.0.0.1:8003"
+  },
+  "tests": {
+    "PR-01": {
+      "objective": "Auth response hygiene: /api/auth/me must return profile without credential fields",
+      "expected": "200 with id/name/email/created_at only; no password/hash/token fields",
+      "actual": "200; profile fields=['created_at', 'email', 'id', 'name']; secret-bearing fields=none",
+      "leaks": []
+    },
+    "PR-02": {
+      "objective": "Session scoping: audit user B authenticates and sees only own identity",
+      "expected": "200 with B's email, not user 1's",
+      "actual": "HTTP 200; B sees only own profile: True; body email=audit.b.1790610596@example.com",
+      "leaks": []
+    },
+    "PR-03": {
+      "objective": "Cross-user data leakage: B's wardrobe list must never contain user-1 items",
+      "expected": "200 with B's empty (or B-only) wardrobe; zero user-1 item codes",
+      "actual": "HTTP 200; B wardrobe rows=0; user-1 codes leaked to B: none",
+      "leaks": []
+    },
+    "PR-04": {
+      "objective": "IDOR read: B requests user-1 wardrobe item by direct id",
+      "expected": "403/404; no item data returned",
+      "actual": "HTTP 404; IDOR read of user-1 item 25 succeeded: False",
+      "leaks": []
+    },
+    "PR-05": {
+      "objective": "IDOR update: B attempts PUT-mutation of user-1 wardrobe item",
+      "expected": "Write rejected AND item unchanged when re-read by owner",
+      "actual": "B-write HTTP 404; item colour now mutated: False",
+      "leaks": []
+    },
+    "PR-06": {
+      "objective": "IDOR delete: B attempts DELETE of user-1 wardrobe item",
+      "expected": "Delete rejected; item still present afterwards",
+      "actual": "B-delete HTTP 404; user-1 item still exists afterwards: True",
+      "leaks": []
+    },
+    "PR-07": {
+      "objective": "IDOR read: B fetches user-1 outfit analysis by request_id",
+      "expected": "403/404; analysis text/requirements not returned",
+      "actual": "HTTP 404; B read user-1 analysis REQ-2026-11225C: False",
+      "leaks": []
+    },
+    "PR-08": {
+      "objective": "Recent-analysis exposure: B's /api/analyze/recent/latest must not return user-1 analysis",
+      "expected": "null (B has no history) \u2014 never user-1's record",
+      "actual": "HTTP 200; B latest-analysis is user-1's analysis: False; body is null: True",
+      "leaks": []
+    },
+    "PR-09": {
+      "objective": "Unauthenticated + malformed token handling on protected endpoint",
+      "expected": "401 for all variants; generic error, no stack traces/secrets/SQL",
+      "actual": "HTTP statuses: no-auth->401, garbage-bearer->401, empty-bearer->401; stack/secret in error bodies: False",
+      "leaks": []
+    },
+    "PR-10": {
+      "objective": "Token tampering: signature-flipped copy of a valid JWT",
+      "expected": "401; no data served",
+      "actual": "HTTP 401 on signature-tampered JWT; data served: False",
+      "leaks": []
+    },
+    "PR-11": {
+      "objective": "Expired session: JWT minted with negative expiry",
+      "expected": "401; no data served",
+      "actual": "HTTP 401 on expired JWT; data served: False",
+      "leaks": []
+    },
+    "PR-12": {
+      "objective": "Token forgery: unsigned alg:none JWT claiming sub=1",
+      "expected": "401; no data served",
+      "actual": "HTTP 401 on alg:none forged JWT; data served: False",
+      "leaks": []
+    },
+    "PR-13": {
+      "objective": "Search-history isolation (Agent 2): B must not see, read, or delete user-1 history",
+      "expected": "B list excludes A records; A-history GET/DELETE as B rejected",
+      "actual": "B list contaminated with A history: False; B GET A-history HTTP 404; B DELETE A-history HTTP 404",
+      "leaks": []
+    },
+    "PR-14": {
+      "objective": "Usage-data IDOR (Agent 3): B queries /budget/usage/1 (user-1 tenant)",
+      "expected": "Cross-tenant rejected (403/404); own usage allowed",
+      "actual": "B->user1 usage HTTP 403 (leak=False); B->own usage HTTP 200",
+      "leaks": []
+    },
+    "PR-15": {
+      "objective": "Account enumeration: duplicate-register message + unknown-email vs wrong-password login",
+      "expected": "Ideal: identical login errors, non-revealing duplicate message",
+      "actual": "dup-register HTTP 400 (existence-revealing msg: True); unknown-email HTTP 401; login errors indistinguishable: True",
+      "leaks": []
+    },
+    "PR-16": {
+      "objective": "Credential storage: audit user B password persisted as bcrypt hash, never plaintext",
+      "expected": "Stored value starts with bcrypt prefix; plaintext not present in column",
+      "actual": "stored hash prefix=$2b$; bcrypt=True; length=60; plaintext present: False",
+      "leaks": []
+    },
+    "PR-17": {
+      "objective": "Sensitive image storage: wardrobe image via /uploads without auth + path traversal",
+      "expected": "Traversal blocked; unauthenticated image accessibility documented",
+      "actual": "unauth image fetch HTTP 200 (image bytes served: True); path-traversal HTTP 404, source served: False",
+      "leaks": []
+    },
+    "PR-18": {
+      "objective": "Error-message leakage: validation failure and missing-file responses",
+      "expected": "422/404 with generic detail; no traceback, SQL, or config internals",
+      "actual": "invalid-item HTTP 422; missing-image HTTP 404; internals in error text: False",
+      "leaks": []
+    }
+  },
+  "any_leak_markers": {}
+}

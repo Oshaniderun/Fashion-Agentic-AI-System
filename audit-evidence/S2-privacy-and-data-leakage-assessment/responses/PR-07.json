@@ -1,0 +1,11 @@
+{
+  "test_id": "PR-07",
+  "timestamp_utc": "2026-09-28T15:50:06.295074+00:00",
+  "objective": "IDOR read: B fetches user-1 outfit analysis by request_id",
+  "expected_behaviour": "403/404; analysis text/requirements not returned",
+  "actual_behaviour": "HTTP 404; B read user-1 analysis REQ-2026-11225C: False",
+  "leak_markers_found": [],
+  "response": {
+    "detail": "Analysis with request ID 'REQ-2026-11225C' was not found for this user."
+  }
+}

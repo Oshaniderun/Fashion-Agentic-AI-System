@@ -1,0 +1,19 @@
+{
+  "test_id": "PR-13",
+  "timestamp_utc": "2026-09-28T15:50:06.553353+00:00",
+  "objective": "Search-history isolation (Agent 2): B must not see, read, or delete user-1 history",
+  "expected_behaviour": "B list excludes A records; A-history GET/DELETE as B rejected",
+  "actual_behaviour": "B list contaminated with A history: False; B GET A-history HTTP 404; B DELETE A-history HTTP 404",
+  "leak_markers_found": [],
+  "response": {
+    "list": {
+      "entries": []
+    },
+    "get": {
+      "detail": "History entry not found."
+    },
+    "delete": {
+      "detail": "History entry not found."
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "test_id": "IR-11",
+  "timestamp_utc": "2026-09-28T16:25:00.795623+00:00",
+  "objective": "Price & URL integrity of retrieval results",
+  "expected_behaviour": "No over-ceiling prices; HTTPS-only product urls",
+  "actual_behaviour": "10 results; price-ceiling violations: none; non-HTTPS urls: none",
+  "leak_markers_found": [],
+  "response": {
+    "violations": [],
+    "urls": []
+  }
+}

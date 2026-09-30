@@ -102,8 +102,7 @@ export interface HandoffRetrievalResponse {
 }
 
 // ---- GET /api/v1/products/{id} (app/schemas/product.py) ----
-export interface Agent2Product {
-  product_id: string;
+export interface Agent2Product {  product_id: string;
   product_name: string;
   category?: string | null;
   subcategory?: string | null;
@@ -120,4 +119,26 @@ export interface Agent2Product {
   product_url?: string | null;
   availability?: boolean | null;
   created_at: string;
+}
+
+// ---- /api/v1/history (app/services/history_service.py) ----
+export interface SearchHistoryEntry {
+  id: number;
+  source: 'search' | 'agent1_handoff';
+  request_id: string | null;
+  query_text: string | null;
+  category: string | null;
+  preferred_colour: string | null;
+  style: string | null;
+  occasion: string | null;
+  max_price: number | null;
+  status: RetrievalStatus;
+  result_count: number;
+  relaxed_constraints: string[];
+  product_ids: string[];
+  created_at: string | null;
+}
+
+export interface SearchHistoryDetail extends Omit<SearchHistoryEntry, 'product_ids'> {
+  products: Partial<Agent2Product>[];
 }

@@ -16,8 +16,8 @@ const LINKS = [
   { to: '/request', label: 'Fashion Request', icon: Sparkles },
   { to: '/wardrobe', label: 'Wardrobe', icon: Shirt },
   { to: '/wardrobe/add', label: 'Add Clothing', icon: PlusCircle },
-  { to: '/agent2', label: 'Retrieval History', icon: Boxes, end: true },
   { to: '/agent2/search', label: 'Product Search', icon: Search },
+  { to: '/agent2', label: 'Retrieval History', icon: Boxes, end: true },
   { to: '/budget', label: 'Budget', icon: Wallet },
 ];
 

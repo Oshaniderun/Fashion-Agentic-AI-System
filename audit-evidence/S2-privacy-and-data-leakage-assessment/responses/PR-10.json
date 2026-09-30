@@ -1,0 +1,14 @@
+{
+  "test_id": "PR-10",
+  "timestamp_utc": "2026-09-28T15:50:06.476790+00:00",
+  "objective": "Token tampering: signature-flipped copy of a valid JWT",
+  "expected_behaviour": "401; no data served",
+  "actual_behaviour": "HTTP 401 on signature-tampered JWT; data served: False",
+  "leak_markers_found": [],
+  "response": {
+    "status": 401,
+    "body": {
+      "detail": "Could not validate credentials."
+    }
+  }
+}

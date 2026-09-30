@@ -1,0 +1,9 @@
+{
+  "test_id": "PR-08",
+  "timestamp_utc": "2026-09-28T15:50:06.320514+00:00",
+  "objective": "Recent-analysis exposure: B's /api/analyze/recent/latest must not return user-1 analysis",
+  "expected_behaviour": "null (B has no history) \u2014 never user-1's record",
+  "actual_behaviour": "HTTP 200; B latest-analysis is user-1's analysis: False; body is null: True",
+  "leak_markers_found": [],
+  "response": null
+}

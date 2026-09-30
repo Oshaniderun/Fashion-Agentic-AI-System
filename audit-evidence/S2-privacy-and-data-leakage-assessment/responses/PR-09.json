@@ -1,0 +1,28 @@
+{
+  "test_id": "PR-09",
+  "timestamp_utc": "2026-09-28T15:50:06.451370+00:00",
+  "objective": "Unauthenticated + malformed token handling on protected endpoint",
+  "expected_behaviour": "401 for all variants; generic error, no stack traces/secrets/SQL",
+  "actual_behaviour": "HTTP statuses: no-auth->401, garbage-bearer->401, empty-bearer->401; stack/secret in error bodies: False",
+  "leak_markers_found": [],
+  "response": {
+    "no-auth": {
+      "status": 401,
+      "body": {
+        "detail": "Could not validate credentials."
+      }
+    },
+    "garbage-bearer": {
+      "status": 401,
+      "body": {
+        "detail": "Could not validate credentials."
+      }
+    },
+    "empty-bearer": {
+      "status": 401,
+      "body": {
+        "detail": "Could not validate credentials."
+      }
+    }
+  }
+}

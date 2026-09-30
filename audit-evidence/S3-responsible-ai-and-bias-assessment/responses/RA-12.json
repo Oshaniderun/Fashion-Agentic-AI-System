@@ -1,0 +1,17 @@
+{
+  "test_id": "RA-12",
+  "timestamp_utc": "2026-09-28T16:11:06.503228+00:00",
+  "objective": "Hallucination guard: every product id in the live A3 plan must exist in Agent 2 catalogue",
+  "expected_behaviour": "100% of referenced products verifiable",
+  "actual_behaviour": "plan references 2 distinct product ids; 2 verified to exist at Agent 2 (fabricated: none); price mismatches vs catalogue: none",
+  "leak_markers_found": [],
+  "response": {
+    "distinct_ids": [
+      "B07G7BQ834",
+      "B07QH9PYJ4"
+    ],
+    "verified": 2,
+    "fabricated": [],
+    "price_mismatches": []
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "test_id": "IR-05",
+  "timestamp_utc": "2026-09-28T16:24:49.937070+00:00",
+  "objective": "Query-parameter validation battery (top_k, max_price, category, retry_count, request_id)",
+  "expected_behaviour": "All invalid inputs 422",
+  "actual_behaviour": "statuses {'top_k=0': 422, 'top_k=21': 422, 'max_price=0': 422, 'max_price=-5': 422, 'bad category': 422, 'retry_count=5': 422, 'missing request_id': 422}; all rejected 422: True",
+  "leak_markers_found": [],
+  "response": {
+    "top_k=0": 422,
+    "top_k=21": 422,
+    "max_price=0": 422,
+    "max_price=-5": 422,
+    "bad category": 422,
+    "retry_count=5": 422,
+    "missing request_id": 422
+  }
+}

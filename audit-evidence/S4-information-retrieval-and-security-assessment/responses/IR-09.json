@@ -1,0 +1,57 @@
+{
+  "test_id": "IR-09",
+  "timestamp_utc": "2026-09-28T16:24:55.641209+00:00",
+  "objective": "HTML/script payload: survival in response and persistence into history (content trust)",
+  "expected_behaviour": "Document whether raw markup is stored/echoed",
+  "actual_behaviour": "HTML/script in query -> HTTP 200, payload survived in API response: False; persisted raw into search history rows: 5",
+  "leak_markers_found": [],
+  "response": {
+    "survived": false,
+    "stored": [
+      {
+        "id": 143,
+        "source": "search",
+        "request_id": "S4-d793f20c",
+        "query_text": "<script>alert('s4')</script> leather jacket",
+        "category": "top",
+        "preferred_colour": null,
+        "style": null,
+        "occasion": null,
+        "max_price": 500.0,
+        "status": "ok",
+        "result_count": 5,
+        "relaxed_constraints": [],
+        "product_ids": [
+          "B07K4PQ39H",
+          "B07YNCKQR3",
+          "B07YNC4R8B",
+          "B015YK5TNI",
+          "B00X4YJL4K"
+        ],
+        "created_at": "2026-09-28T21:54:55.523280+05:30"
+      },
+      {
+        "id": 116,
+        "source": "search",
+        "request_id": "AUDIT-S1-PI14-729f24",
+        "query_text": "ESC[[31mred[0m] NUL[] TAG[<script>alert(1)</script>] heel",
+        "category": "footwear",
+        "preferred_colour": null,
+        "style": null,
+        "occasion": null,
+        "max_price": 5000.0,
+        "status": "ok",
+        "result_count": 5,
+        "relaxed_constraints": [],
+        "product_ids": [
+          "B014QJM0JE",
+          "B09VX5M4TS",
+          "B095Y7TDQD",
+          "B08WZ42T11",
+          "B08WZ5H7NN"
+        ],
+        "created_at": "2026-09-28T18:56:44.044433+05:30"
+      }
+    ]
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "test_id": "PI-15",
+  "timestamp_utc": "2026-09-28T13:26:44.050414+00:00",
+  "objective": "Error-channel information disclosure (404 analysis id, unauthenticated request)",
+  "expected_behaviour": "Structured errors only; no stack traces, secrets, or prompt text",
+  "actual_behaviour": "nonexistent-analysis HTTP 404; unauthenticated-request HTTP 401; stack trace leaked: False; secret markers in error bodies: none",
+  "leak_markers_found": [],
+  "response": {
+    "nonexistent_analysis": {
+      "http": 404,
+      "body": {
+        "detail": "Analysis with request ID 'REQ-DOES-NOT-EXIST' was not found for this user."
+      }
+    },
+    "unauthenticated_request": {
+      "http": 401,
+      "body": {
+        "detail": "Could not validate credentials."
+      }
+    },
+    "_observed": {
+      "stack_trace_leaked": false,
+      "leak_markers": []
+    }
+  },
+  "auth": "Bearer JWT [REDACTED FROM EVIDENCE]"
+}

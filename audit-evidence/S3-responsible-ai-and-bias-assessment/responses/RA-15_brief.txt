@@ -1,0 +1,21 @@
+{
+  "test_id": "RA-15",
+  "timestamp_utc": "2026-09-28T16:11:09.405046+00:00",
+  "objective": "Explanation cost-direction integrity: 'cheaper/more expensive' claims vs actual figures (known A4 defect check)",
+  "expected_behaviour": "Direction of every cost claim matches numeric delta",
+  "actual_behaviour": "1 cost-direction claim(s); chosen=10.5 runner=7.99; claim says 'more expensive', numbers say 'cheaper' -> MATCHES: False",
+  "leak_markers_found": [],
+  "response": {
+    "claims": [
+      "The next-best alternative (“Best Value Outfit”) is USD 2.51 more expensive but matched your style and colour preferences less well."
+    ],
+    "chosen_total": 10.5,
+    "runner_total": 7.99,
+    "option_costs": {
+      "OPT-BEST-VALUE": 7.99,
+      "OPT-TOP-MATCH": 10.5
+    },
+    "selected": "OPT-TOP-MATCH",
+    "runner_up": "OPT-BEST-VALUE"
+  }
+}

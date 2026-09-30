@@ -1,0 +1,25 @@
+{
+  "test_id": "IR-14",
+  "timestamp_utc": "2026-09-28T16:25:02.085699+00:00",
+  "objective": "Inventory truthfulness: indexed status + availability metadata present",
+  "expected_behaviour": "Honest status counts; availability exposed per product",
+  "actual_behaviour": "status HTTP 200; indexed_count reported: None; availability fields present on results: True",
+  "leak_markers_found": [],
+  "response": {
+    "status": {
+      "service": "agent2_retrieval",
+      "database_connected": true,
+      "db_product_count": 43070,
+      "catalogue_loaded": 43070,
+      "bm25_index_loaded": true,
+      "bm25_document_count": 43070,
+      "chroma_connected": true,
+      "chroma_using_memory_fallback": false,
+      "chroma_document_count": 43070,
+      "embedding_model": "all-MiniLM-L6-v2",
+      "embedding_model_loaded": true,
+      "embedding_dimensions": 384,
+      "price_currency": "USD"
+    }
+  }
+}

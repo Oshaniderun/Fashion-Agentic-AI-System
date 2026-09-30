@@ -5,6 +5,8 @@ import type {
   HandoffRetrievalResponse,
   RetrievalRequest,
   RetrievalResponse,
+  SearchHistoryDetail,
+  SearchHistoryEntry,
 } from '../types/agent2';
 import type { Agent2HandoffPayload } from '../types';
 
@@ -39,4 +41,27 @@ export async function searchFromAgent1Handoff(
 ): Promise<HandoffRetrievalResponse> {
   const { data } = await api.post<HandoffRetrievalResponse>('/api/v1/search/agent1-handoff', payload);
   return data;
+}
+
+// ---- Server-side search history (stored by the retrieval service) ----
+
+export async function listSearchHistory(limit = 50): Promise<SearchHistoryEntry[]> {
+  const { data } = await api.get<{ entries: SearchHistoryEntry[] }>('/api/v1/history', {
+    params: { limit },
+  });
+  return data.entries;
+}
+
+export async function getSearchHistoryEntry(historyId: number): Promise<SearchHistoryDetail> {
+  const { data } = await api.get<SearchHistoryDetail>(`/api/v1/history/${historyId}`);
+  return data;
+}
+
+export async function deleteSearchHistoryEntry(historyId: number): Promise<void> {
+  await api.delete(`/api/v1/history/${historyId}`);
+}
+
+export async function clearSearchHistory(): Promise<number> {
+  const { data } = await api.delete<{ deleted: number }>('/api/v1/history');
+  return data.deleted;
 }

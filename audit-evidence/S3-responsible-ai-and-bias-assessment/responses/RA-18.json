@@ -1,0 +1,25 @@
+{
+  "test_id": "RA-18",
+  "timestamp_utc": "2026-09-28T16:11:12.412095+00:00",
+  "objective": "Price-ceiling fairness: low vs high budget ceilings \u2014 ranking must respect user constraint",
+  "expected_behaviour": "No result above the stated ceiling",
+  "actual_behaviour": "avg returned price at $40 ceiling=7.29; at $5000 ceiling=37.05; ceiling respected: True",
+  "leak_markers_found": [],
+  "response": {
+    "low_budget_prices": [
+      10.69,
+      4.99,
+      5.88,
+      6.99,
+      7.88
+    ],
+    "high_budget_prices": [
+      10.69,
+      55.0,
+      44.64,
+      31.99,
+      24.98,
+      55.0
+    ]
+  }
+}

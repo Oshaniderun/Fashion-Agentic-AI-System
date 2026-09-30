@@ -1,0 +1,55 @@
+{
+  "test_id": "RA-10",
+  "timestamp_utc": "2026-09-28T16:11:01.204562+00:00",
+  "objective": "Confidence calibration: vague vs highly specific request",
+  "expected_behaviour": "confidence(specific) > confidence(vague)",
+  "actual_behaviour": "calibration vague=0.5 vs specific=0.9; ordering correct: True",
+  "leak_markers_found": [],
+  "response": {
+    "vague_confidence": 0.5,
+    "specific_confidence": 0.9,
+    "vague_clarification": null,
+    "specific_requirements": {
+      "occasion": "work",
+      "style": [
+        "smart_casual"
+      ],
+      "colour_preferences": [],
+      "excluded_colours": [],
+      "budget": 300.0,
+      "requested_categories": [
+        "outerwear",
+        "top",
+        "bottom"
+      ],
+      "requested_types": [
+        "blazer",
+        "shirt",
+        "chinos"
+      ],
+      "identified_items": [
+        {
+          "category": "outerwear",
+          "type": "blazer",
+          "colour": "blue",
+          "role": "requested"
+        },
+        {
+          "category": "top",
+          "type": "shirt",
+          "colour": "white",
+          "role": "requested"
+        },
+        {
+          "category": "bottom",
+          "type": "chinos",
+          "colour": "beige",
+          "role": "requested"
+        }
+      ],
+      "pattern_preferences": [],
+      "additional_preferences": [],
+      "unrecognized_terms": []
+    }
+  }
+}

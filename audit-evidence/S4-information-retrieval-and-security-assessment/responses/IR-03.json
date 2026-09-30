@@ -1,0 +1,12 @@
+{
+  "test_id": "IR-03",
+  "timestamp_utc": "2026-09-28T16:24:48.998451+00:00",
+  "objective": "Inter-agent service-token auth path behaves as designed on search",
+  "expected_behaviour": "200 via X-Service-Token (and Bearer variant) with no token value echoed",
+  "actual_behaviour": "X-Service-Token -> HTTP 200; Bearer-with-service-token -> HTTP 200 (inter-agent auth path exists and is accepted)",
+  "leak_markers_found": [],
+  "response": {
+    "header_call": "200 results",
+    "bearer_call": "200 results"
+  }
+}

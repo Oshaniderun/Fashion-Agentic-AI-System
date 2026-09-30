@@ -1,0 +1,35 @@
+{
+  "test_id": "RA-11",
+  "timestamp_utc": "2026-09-28T16:11:02.431906+00:00",
+  "objective": "Contradictory request ('swimming in the snow'): clarification instead of confident nonsense",
+  "expected_behaviour": "clarification_needed=True with helpful message",
+  "actual_behaviour": "contradictory request: clarification_needed=True, message=Couldn\u2019t recognize \u201csnow\u201d as a clothing item. Please rephrase your request (for example: \u201cI need a dress\u201d, \u201cI need a black blouse\u201d)., missing_categories=[]",
+  "leak_markers_found": [],
+  "response": {
+    "outfit_requirements": {
+      "required_categories": [],
+      "available_categories": [],
+      "missing_categories": [],
+      "optional_categories": [],
+      "clarification_needed": true,
+      "clarification_message": "Couldn\u2019t recognize \u201csnow\u201d as a clothing item. Please rephrase your request (for example: \u201cI need a dress\u201d, \u201cI need a black blouse\u201d)."
+    },
+    "user_requirements": {
+      "occasion": null,
+      "style": [
+        "casual"
+      ],
+      "colour_preferences": [],
+      "excluded_colours": [],
+      "budget": null,
+      "requested_categories": [],
+      "requested_types": [],
+      "identified_items": [],
+      "pattern_preferences": [],
+      "additional_preferences": [],
+      "unrecognized_terms": [
+        "snow"
+      ]
+    }
+  }
+}

@@ -1,0 +1,113 @@
+{
+  "test_id": "PI-14",
+  "timestamp_utc": "2026-09-28T13:26:43.578208+00:00",
+  "objective": "Terminal-control/ESC + <script> injection through Agent 2 query_text (retrieval ingress)",
+  "expected_behaviour": "sanitize_input_text strips control chars before storage; markup handling documented",
+  "actual_behaviour": "search HTTP 200; control chars survived storage: False; <script> survived storage: True",
+  "leak_markers_found": [],
+  "response": {
+    "request_id": "AUDIT-S1-PI14-729f24",
+    "status": "ok",
+    "results": [
+      {
+        "product_id": "B014QJM0JE",
+        "name": "Yosi Samra Girl's Sammie Embossed Flats Purple Size 4.0M",
+        "category": "footwear",
+        "colour": "purple",
+        "price": null,
+        "store": "Yosi Samra",
+        "url": null,
+        "availability": true,
+        "relevance_score": 0.8355,
+        "score_breakdown": {
+          "semantic_similarity": 0.8515,
+          "colour_match": 0.8,
+          "style_match": 0.8,
+          "budget_suitability": 0.8,
+          "availability": 1.0
+        }
+      },
+      {
+        "product_id": "B09VX5M4TS",
+        "name": "Greatest 23 Chicago New Greatest MJ 23 Goat Gray Red Era Snapback Hat Cap One Size",
+        "category": "footwear",
+        "colour": "gray",
+        "price": null,
+        "store": "Greatest 23",
+        "url": null,
+        "availability": true,
+        "relevance_score": 0.7542,
+        "score_breakdown": {
+          "semantic_similarity": 0.5808,
+          "colour_match": 0.8,
+          "style_match": 0.8,
+          "budget_suitability": 0.8,
+          "availability": 1.0
+        }
+      },
+      {
+        "product_id": "B095Y7TDQD",
+        "name": "Greatest 23 Chicago New MJ Legend Bull Head Splash Black Timber Brown Hook Up Era Snapback Hat Cap,One Size",
+        "category": "footwear",
+        "colour": "black",
+        "price": null,
+        "store": "Greatest 23",
+        "url": null,
+        "availability": true,
+        "relevance_score": 0.7542,
+        "score_breakdown": {
+          "semantic_similarity": 0.5808,
+          "colour_match": 0.8,
+          "style_match": 0.8,
+          "budget_suitability": 0.8,
+          "availability": 1.0
+        }
+      },
+      {
+        "product_id": "B08WZ42T11",
+        "name": "Greatest 23 Chicago New MJ Legend Bull Head Drip",
+        "category": "footwear",
+        "colour": "Unknown",
+        "price": null,
+        "store": "Greatest 23",
+        "url": null,
+        "availability": true,
+        "relevance_score": 0.7535,
+        "score_breakdown": {
+          "semantic_similarity": 0.5782,
+          "colour_match": 0.8,
+          "style_match": 0.8,
+          "budget_suitability": 0.8,
+          "availability": 1.0
+        }
+      },
+      {
+        "product_id": "B08WZ5H7NN",
+        "name": "Greatest 23 Chicago New MJ Legend Bull Head Drip Red Black Hook Up Era Snapback Hat Cap, One Size",
+        "category": "footwear",
+        "colour": "black",
+        "price": null,
+        "store": "Greatest 23",
+        "url": null,
+        "availability": true,
+        "relevance_score": 0.7462,
+        "score_breakdown": {
+          "semantic_similarity": 0.554,
+          "colour_match": 0.8,
+          "style_match": 0.8,
+          "budget_suitability": 0.8,
+          "availability": 1.0
+        }
+      }
+    ],
+    "relaxed_constraints": [],
+    "notes": null,
+    "_observed": {
+      "search_http": 200,
+      "stored_query_after_sanitize": "ESC[[31mred[0m] NUL[] TAG[<script>alert(1)</script>] heel",
+      "control_chars_in_stored": false,
+      "script_tag_in_stored": true
+    }
+  },
+  "auth": "Bearer JWT [REDACTED FROM EVIDENCE]"
+}

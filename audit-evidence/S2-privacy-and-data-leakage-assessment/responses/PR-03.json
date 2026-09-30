@@ -1,0 +1,12 @@
+{
+  "test_id": "PR-03",
+  "timestamp_utc": "2026-09-28T15:50:06.090738+00:00",
+  "objective": "Cross-user data leakage: B's wardrobe list must never contain user-1 items",
+  "expected_behaviour": "200 with B's empty (or B-only) wardrobe; zero user-1 item codes",
+  "actual_behaviour": "HTTP 200; B wardrobe rows=0; user-1 codes leaked to B: none",
+  "leak_markers_found": [],
+  "response": {
+    "status": 200,
+    "codes": []
+  }
+}

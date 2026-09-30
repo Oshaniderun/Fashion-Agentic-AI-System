@@ -1,0 +1,18 @@
+{
+  "test_id": "IR-10",
+  "timestamp_utc": "2026-09-28T16:25:00.230537+00:00",
+  "objective": "Ranking manipulation via keyword stuffing must not fabricate or displace unfairly",
+  "expected_behaviour": "Results remain real catalogue items",
+  "actual_behaviour": "clean top=('B07TQLYJGS', 0); stuffed top=('B01NBQR9QT', 0); stuffing did not fabricate new items (all ids catalogue-real)",
+  "leak_markers_found": [],
+  "response": {
+    "clean_top": [
+      "B07TQLYJGS",
+      0
+    ],
+    "stuffed_top": [
+      "B01NBQR9QT",
+      0
+    ]
+  }
+}

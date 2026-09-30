@@ -1,0 +1,12 @@
+{
+  "test_id": "IR-12",
+  "timestamp_utc": "2026-09-28T16:25:01.526533+00:00",
+  "objective": "Result-to-catalogue truth check + unknown id behaviour (fake information)",
+  "expected_behaviour": "All result ids verifiable; fabricated id 404",
+  "actual_behaviour": "10/10 result ids verified against catalogue; price drift: none; fabricated-id lookup -> HTTP 404 (want 404)",
+  "leak_markers_found": [],
+  "response": {
+    "drift": [],
+    "ghost_status": 404
+  }
+}

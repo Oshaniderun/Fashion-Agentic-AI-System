@@ -1,0 +1,30 @@
+{
+  "test_id": "PR-14",
+  "timestamp_utc": "2026-09-28T15:50:06.650079+00:00",
+  "objective": "Usage-data IDOR (Agent 3): B queries /budget/usage/1 (user-1 tenant)",
+  "expected_behaviour": "Cross-tenant rejected (403/404); own usage allowed",
+  "actual_behaviour": "B->user1 usage HTTP 403 (leak=False); B->own usage HTTP 200",
+  "leak_markers_found": [],
+  "response": {
+    "cross": {
+      "detail": "Access forbidden: you cannot access or manipulate budget records belonging to another user."
+    },
+    "own": {
+      "user_id": "6",
+      "month": "2026-09",
+      "tier": "free",
+      "recommendations_used": 0,
+      "monthly_limit": 3,
+      "recommendations_remaining": 3,
+      "upgraded_at": null,
+      "premium_price_usd": 3.99,
+      "premium_benefits": [
+        "Unlimited recommendations",
+        "Wardrobe tracking",
+        "Advanced style analysis",
+        "Shopping optimisation",
+        "Personalised fashion history"
+      ]
+    }
+  }
+}

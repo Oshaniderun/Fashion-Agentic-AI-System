@@ -9,7 +9,6 @@ import { LoadingSkeleton } from '../components/LoadingSkeleton';
 import { getAnalysis } from '../services/analysisService';
 import { searchFromAgent1Handoff } from '../services/agent2Service';
 import { statusMeta, describeHttpError } from '../services/agent2Format';
-import { recordRecentSearch } from '../services/agent2History';
 import { planPurchases } from '../services/budgetService';
 import { cachePlan, cacheRetrievalContext, readCachedPlan, savePlanRef } from '../services/budgetHistory';
 import { planErrorText } from '../components/budget/OutfitOptionCard';
@@ -65,19 +64,6 @@ export function AnalysisResult() {
     try {
       const res = await searchFromAgent1Handoff(data.agent2_handoff);
       setHandoff(res);
-      const q = data.agent2_handoff.search_requirements?.query_text ?? data.input_text;
-      res.retrievals.forEach((r) => {
-        if (r.response) {
-          recordRecentSearch({
-            at: new Date().toISOString(),
-            category: r.category,
-            query_text: q,
-            status: r.response.status,
-            results: r.response.results.length,
-            response: r.response,
-          });
-        }
-      });
     } catch (err) {
       setHandoff(null);
       const status = (err as { response?: { status?: number } }).response?.status;

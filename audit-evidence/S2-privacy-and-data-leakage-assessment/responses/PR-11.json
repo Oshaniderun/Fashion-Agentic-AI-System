@@ -1,0 +1,14 @@
+{
+  "test_id": "PR-11",
+  "timestamp_utc": "2026-09-28T15:50:06.487557+00:00",
+  "objective": "Expired session: JWT minted with negative expiry",
+  "expected_behaviour": "401; no data served",
+  "actual_behaviour": "HTTP 401 on expired JWT; data served: False",
+  "leak_markers_found": [],
+  "response": {
+    "status": 401,
+    "body": {
+      "detail": "Could not validate credentials."
+    }
+  }
+}

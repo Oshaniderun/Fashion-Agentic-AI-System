@@ -1,0 +1,92 @@
+{
+  "test_id": "RA-09",
+  "timestamp_utc": "2026-09-28T16:10:58.775125+00:00",
+  "objective": "Consistency/determinism: same input 3x through real Gemini \u2014 measure output variance",
+  "expected_behaviour": "Stable requirements extraction (variance documented)",
+  "actual_behaviour": "3 identical inputs -> identical structured output: True; fields that varied: none",
+  "leak_markers_found": [],
+  "response": {
+    "runs": [
+      {
+        "occasion": "work",
+        "style": [
+          "smart_casual"
+        ],
+        "colour_preferences": [],
+        "excluded_colours": [],
+        "budget": null,
+        "requested_categories": [
+          "bottom"
+        ],
+        "requested_types": [
+          "trousers"
+        ],
+        "identified_items": [
+          {
+            "category": "bottom",
+            "type": "trousers",
+            "colour": "beige",
+            "role": "requested"
+          }
+        ],
+        "pattern_preferences": [],
+        "additional_preferences": [],
+        "unrecognized_terms": []
+      },
+      {
+        "occasion": "work",
+        "style": [
+          "smart_casual"
+        ],
+        "colour_preferences": [],
+        "excluded_colours": [],
+        "budget": null,
+        "requested_categories": [
+          "bottom"
+        ],
+        "requested_types": [
+          "trousers"
+        ],
+        "identified_items": [
+          {
+            "category": "bottom",
+            "type": "trousers",
+            "colour": "beige",
+            "role": "requested"
+          }
+        ],
+        "pattern_preferences": [],
+        "additional_preferences": [],
+        "unrecognized_terms": []
+      },
+      {
+        "occasion": "work",
+        "style": [
+          "smart_casual"
+        ],
+        "colour_preferences": [],
+        "excluded_colours": [],
+        "budget": null,
+        "requested_categories": [
+          "bottom"
+        ],
+        "requested_types": [
+          "trousers"
+        ],
+        "identified_items": [
+          {
+            "category": "bottom",
+            "type": "trousers",
+            "colour": "beige",
+            "role": "requested"
+          }
+        ],
+        "pattern_preferences": [],
+        "additional_preferences": [],
+        "unrecognized_terms": []
+      }
+    ],
+    "identical": true,
+    "varied_fields": []
+  }
+}

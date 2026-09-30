@@ -4,7 +4,6 @@ import { ErrorAlert } from '../../components/ErrorAlert';
 import { LoadingSkeleton } from '../../components/LoadingSkeleton';
 import { ProductCard } from '../../components/ProductCard';
 import { agent2Search } from '../../services/agent2Service';
-import { recordRecentSearch } from '../../services/agent2History';
 import { describeHttpError, statusMeta, validateSearchForm } from '../../services/agent2Format';
 import { extractErrorMessage } from '../../services/api';
 import type { ProductCategory, RetrievalResponse } from '../../types/agent2';
@@ -59,14 +58,6 @@ export function Agent2Search() {
         top_k: kNum,
       });
       setResult(res);
-      recordRecentSearch({
-        at: new Date().toISOString(),
-        category,
-        query_text: queryText.trim() || null,
-        status: res.status,
-        results: res.results.length,
-        response: res,
-      });
     } catch (err) {
       setResult(null);
       setError(

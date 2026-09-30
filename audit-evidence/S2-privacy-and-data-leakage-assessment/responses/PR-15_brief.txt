@@ -1,0 +1,19 @@
+{
+  "test_id": "PR-15",
+  "timestamp_utc": "2026-09-28T15:50:07.126961+00:00",
+  "objective": "Account enumeration: duplicate-register message + unknown-email vs wrong-password login",
+  "expected_behaviour": "Ideal: identical login errors, non-revealing duplicate message",
+  "actual_behaviour": "dup-register HTTP 400 (existence-revealing msg: True); unknown-email HTTP 401; login errors indistinguishable: True",
+  "leak_markers_found": [],
+  "response": {
+    "dup": {
+      "detail": "An account with this email address already exists."
+    },
+    "bad_pw": {
+      "detail": "Invalid email or password."
+    },
+    "unknown": {
+      "detail": "Invalid email or password."
+    }
+  }
+}

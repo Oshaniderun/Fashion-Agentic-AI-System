@@ -1,0 +1,14 @@
+{
+  "test_id": "IR-04",
+  "timestamp_utc": "2026-09-28T16:24:49.025464+00:00",
+  "objective": "Service token must NOT unlock user history data",
+  "expected_behaviour": "401/403",
+  "actual_behaviour": "service token reading user history -> HTTP 403 (want 401/403)",
+  "leak_markers_found": [],
+  "response": {
+    "status": 403,
+    "body": {
+      "detail": "Search history is only available to authenticated users."
+    }
+  }
+}

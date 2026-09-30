@@ -1,0 +1,11 @@
+{
+  "test_id": "PR-04",
+  "timestamp_utc": "2026-09-28T15:50:06.112523+00:00",
+  "objective": "IDOR read: B requests user-1 wardrobe item by direct id",
+  "expected_behaviour": "403/404; no item data returned",
+  "actual_behaviour": "HTTP 404; IDOR read of user-1 item 25 succeeded: False",
+  "leak_markers_found": [],
+  "response": {
+    "detail": "Wardrobe item not found."
+  }
+}

@@ -14,6 +14,7 @@ from app.core.config import get_settings
 from app.api.routes import router
 from app.api.ops_routes import router as ops_router
 from app.models.product import Base
+from app.models.search_history import SearchHistory  # noqa: F401  (registers table with Base.metadata)
 from app.api.dependencies import engine
 from app.services.retrieval_service import get_retrieval_service
 

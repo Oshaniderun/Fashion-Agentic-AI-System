@@ -1,0 +1,12 @@
+{
+  "test_id": "IR-17",
+  "timestamp_utc": "2026-09-28T16:25:18.675958+00:00",
+  "objective": "Oversized payload handling (resource abuse)",
+  "expected_behaviour": "Bounded response, service stays up",
+  "actual_behaviour": "oversized request (50 KB query, 3 KB request_id) -> HTTP 400; response bytes: 76; service still responding after: ",
+  "leak_markers_found": [],
+  "response": {
+    "status": 400,
+    "resp_len": 76
+  }
+}

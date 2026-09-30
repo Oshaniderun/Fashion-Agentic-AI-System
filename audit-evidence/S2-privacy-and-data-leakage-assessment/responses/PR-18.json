@@ -1,0 +1,50 @@
+{
+  "test_id": "PR-18",
+  "timestamp_utc": "2026-09-28T15:50:07.313680+00:00",
+  "objective": "Error-message leakage: validation failure and missing-file responses",
+  "expected_behaviour": "422/404 with generic detail; no traceback, SQL, or config internals",
+  "actual_behaviour": "invalid-item HTTP 422; missing-image HTTP 404; internals in error text: False",
+  "leak_markers_found": [],
+  "response": {
+    "val": {
+      "detail": [
+        {
+          "type": "missing",
+          "loc": [
+            "body",
+            "image_path"
+          ],
+          "msg": "Field required",
+          "input": {
+            "category": "not-a-category"
+          }
+        },
+        {
+          "type": "missing",
+          "loc": [
+            "body",
+            "type"
+          ],
+          "msg": "Field required",
+          "input": {
+            "category": "not-a-category"
+          }
+        },
+        {
+          "type": "missing",
+          "loc": [
+            "body",
+            "colour"
+          ],
+          "msg": "Field required",
+          "input": {
+            "category": "not-a-category"
+          }
+        }
+      ]
+    },
+    "404": {
+      "detail": "Not Found"
+    }
+  }
+}

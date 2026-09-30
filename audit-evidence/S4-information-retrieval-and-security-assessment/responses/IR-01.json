@@ -1,0 +1,11 @@
+{
+  "test_id": "IR-01",
+  "timestamp_utc": "2026-09-28T16:24:46.107943+00:00",
+  "objective": "API authentication: retrieval endpoint must reject anonymous calls",
+  "expected_behaviour": "401 with generic hint",
+  "actual_behaviour": "unauth POST /api/v1/search -> HTTP 401; detail generic: False",
+  "leak_markers_found": [],
+  "response": {
+    "detail": "Missing authentication credentials (provide Authorization Bearer token or X-Service-Token)"
+  }
+}

@@ -10,12 +10,13 @@ export function SecurityLab() {
   const [report, setReport] = useState<SecurityThreatReport | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const showPresets = false;
 
   useEffect(() => {
     listSecurityPresets()
       .then((data) => {
         setPresets(data);
-        if (data[0]) setPrompt(data[0].prompt);
+        if (data[0] && showPresets) setPrompt(data[0].prompt);
       })
       .catch((err) => setError(extractErrorMessage(err)));
   }, []);
@@ -47,19 +48,24 @@ export function SecurityLab() {
 
       <div className="split-2">
         <div className="panel stack">
-          <h2>Preset attack payloads</h2>
-          <div className="chip-row">
-            {presets.map((p) => (
-              <button
-                key={p.id}
-                type="button"
-                className={`chip ${prompt === p.prompt ? 'active' : ''}`}
-                onClick={() => setPrompt(p.prompt)}
-              >
-                {p.name}
-              </button>
-            ))}
-          </div>
+          {/* showPresets=false hides the chip row for clean audit-report screenshots; set true to restore */}
+          {showPresets && (
+            <>
+              <h2>Preset attack payloads</h2>
+              <div className="chip-row">
+                {presets.map((p) => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    className={`chip ${prompt === p.prompt ? 'active' : ''}`}
+                    onClick={() => setPrompt(p.prompt)}
+                  >
+                    {p.name}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
           <div className="field">
             <label>Test prompt</label>
             <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} rows={5} />

@@ -1,0 +1,14 @@
+{
+  "test_id": "PR-06",
+  "timestamp_utc": "2026-09-28T15:50:06.249870+00:00",
+  "objective": "IDOR delete: B attempts DELETE of user-1 wardrobe item",
+  "expected_behaviour": "Delete rejected; item still present afterwards",
+  "actual_behaviour": "B-delete HTTP 404; user-1 item still exists afterwards: True",
+  "leak_markers_found": [],
+  "response": {
+    "delete_status": 404,
+    "delete_body": {
+      "detail": "Wardrobe item not found."
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "test_id": "IR-02",
+  "timestamp_utc": "2026-09-28T16:24:46.133211+00:00",
+  "objective": "Invalid bearer token rejected",
+  "expected_behaviour": "401",
+  "actual_behaviour": "invalid bearer -> HTTP 401",
+  "leak_markers_found": [],
+  "response": {
+    "status": 401,
+    "body": {
+      "detail": "Invalid or expired JWT token: Signature verification failed."
+    }
+  }
+}

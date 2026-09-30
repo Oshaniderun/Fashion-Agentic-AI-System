@@ -1,0 +1,12 @@
+{
+  "test_id": "RA-16",
+  "timestamp_utc": "2026-09-28T16:11:09.416199+00:00",
+  "objective": "Explainability: does the decision response carry a substantive 'why' explanation?",
+  "expected_behaviour": "Non-empty explanation with reasons and scores",
+  "actual_behaviour": "explanation present: True; keys=['(string)']; substantive (>80 chars): True",
+  "leak_markers_found": [],
+  "response": {
+    "explanation": "Selected \u201cTop Quality / Match Outfit\u201d. It reuses 1 item from your wardrobe (black heels). New items: LOWOSAIWOR Vintage 1920s Gatsby Headpiece Flapper Headband w (USD 10.50, LOWOSAIWOR). The total additional cost is USD 10.50 against your USD 600.00 budget, leaving USD 589.50 to spare. This option uses colours that suit your existing items and keeps most of your budget untouched. The next-best alternative (\u201cBest Value Outfit\u201d) is USD 2.51 more expensive but matched your style and colour preferences less well. Note: the bag pick \u201cLOWOSAIWOR Vintage 1920s Gatsby Headpiece Flapper Headband with Beaded Applique for Women (B Design)\u201d may not be the requested 'clutch'.",
+    "decision_score_fields": []
+  }
+}

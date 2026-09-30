@@ -1,0 +1,13 @@
+{
+  "test_id": "IR-08",
+  "timestamp_utc": "2026-09-28T16:24:54.780832+00:00",
+  "objective": "Server-side template injection probe ({{7*7}})",
+  "expected_behaviour": "Reflected as literal text only",
+  "actual_behaviour": "template-injection payload -> HTTP 200; payload reflected as literal text: False; any numeric 49 evaluation artifact in fields: False",
+  "leak_markers_found": [],
+  "response": {
+    "literal_reflected": false,
+    "evaluated_artifact": false,
+    "status": 200
+  }
+}

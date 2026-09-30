@@ -1,0 +1,45 @@
+{
+  "test_id": "IR-15",
+  "timestamp_utc": "2026-09-28T16:25:18.628576+00:00",
+  "objective": "API abuse: 30 rapid sequential searches",
+  "expected_behaviour": "Document throttling or its absence",
+  "actual_behaviour": "30 rapid sequential searches -> status distribution {200: 30}; any 429 throttling: False; median latency 533 ms",
+  "leak_markers_found": [],
+  "response": {
+    "codes": {
+      "200": 30
+    },
+    "latencies_ms": [
+      581,
+      474,
+      560,
+      630,
+      796,
+      887,
+      898,
+      611,
+      534,
+      520,
+      549,
+      529,
+      456,
+      466,
+      543,
+      478,
+      438,
+      578,
+      543,
+      427,
+      411,
+      495,
+      619,
+      486,
+      394,
+      594,
+      533,
+      525,
+      495,
+      482
+    ]
+  }
+}

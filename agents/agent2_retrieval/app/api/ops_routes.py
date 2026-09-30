@@ -17,12 +17,14 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 from sqlalchemy import text
+from sqlalchemy.orm import Session
 
 from shared.constants import ProductCategory
 from shared.schemas.agent1_schemas import Agent2HandoffPayload
 from shared.schemas.agent2_schemas import RetrievalRequest, RetrievalResponse
-from app.api.dependencies import SessionLocal, require_auth
+from app.api.dependencies import SessionLocal, get_db, require_auth
 from app.decision_logic import resolve_retrieval
+from app.services import history_service
 from app.services.retrieval_service import get_retrieval_service
 
 router = APIRouter()
@@ -107,6 +109,7 @@ def _type_for_category(payload: Agent2HandoffPayload, cat: str) -> Optional[str]
 def search_from_agent1_handoff(
     payload: Agent2HandoffPayload,
     auth: dict = Depends(require_auth),
+    db: Session = Depends(get_db),
 ) -> HandoffRetrievalResponse:
     sr = payload.search_requirements
     categories = [c for c in (sr.categories or sr.missing_categories or payload.wardrobe_status.missing_categories) if c]
@@ -164,6 +167,7 @@ def search_from_agent1_handoff(
             top_k=5,
         )
         resp = resolve_retrieval(req)
+        history_service.record_search(db, auth, req, resp, source="agent1_handoff")
         retrievals.append(CategoryRetrieval(category=cat_key, request=req, response=resp))
 
     return HandoffRetrievalResponse(

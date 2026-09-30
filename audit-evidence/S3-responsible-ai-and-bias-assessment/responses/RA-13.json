@@ -1,0 +1,55 @@
+{
+  "test_id": "RA-13",
+  "timestamp_utc": "2026-09-28T16:11:06.503228+00:00",
+  "objective": "Agent 4 decision integrity: validation issues + confidence surfaced for real pipeline output",
+  "expected_behaviour": "No validation errors; confidence exposed",
+  "actual_behaviour": "Agent 4 decision={'status': 'complete', 'confidence_score': 0.65, 'confidence_level': 'medium'}; selected=OPT-TOP-MATCH; validation issues=['retrieval_request_id_mismatch', 'type_mismatch']; metrics keys=['budget_efficiency', 'colour_fit', 'decision_score', 'is_complete', 'occasion_fit', 'purchase_count', 'retrieval_relevance', 'style_fit', 'wardrobe_reuse', 'within_budget']; unresolved_requirements=[]",
+  "leak_markers_found": [],
+  "response": {
+    "decision": {
+      "status": "complete",
+      "confidence_score": 0.65,
+      "confidence_level": "medium"
+    },
+    "selected_combination_id": "OPT-TOP-MATCH",
+    "validation_issues": [
+      {
+        "severity": "warning",
+        "code": "retrieval_request_id_mismatch",
+        "message": "Agent 2 response for 'bag' carries request_id REQ-2026-B8B156:bag, expected REQ-2026-B8B156.",
+        "product_id": null,
+        "field": null
+      },
+      {
+        "severity": "warning",
+        "code": "type_mismatch",
+        "message": "No bag item matches the requested type 'clutch'",
+        "product_id": null,
+        "field": "bag"
+      }
+    ],
+    "metrics": {
+      "occasion_fit": 0.675,
+      "style_fit": 0.875,
+      "colour_fit": 0.75,
+      "wardrobe_reuse": 0.5,
+      "retrieval_relevance": 0.879,
+      "budget_efficiency": 0.99,
+      "purchase_count": 1,
+      "within_budget": true,
+      "is_complete": true,
+      "decision_score": 0.776
+    },
+    "budget": {
+      "maximum_usd": 600.0,
+      "additional_cost_usd": 10.5,
+      "remaining_usd": 589.5,
+      "within_budget": true
+    },
+    "purchase_summary": {
+      "purchase_count": 1,
+      "existing_items_used": 1
+    },
+    "unresolved_requirements": []
+  }
+}

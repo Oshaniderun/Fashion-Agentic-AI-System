@@ -1,0 +1,12 @@
+{
+  "test_id": "PR-17",
+  "timestamp_utc": "2026-09-28T15:50:07.286747+00:00",
+  "objective": "Sensitive image storage: wardrobe image via /uploads without auth + path traversal",
+  "expected_behaviour": "Traversal blocked; unauthenticated image accessibility documented",
+  "actual_behaviour": "unauth image fetch HTTP 200 (image bytes served: True); path-traversal HTTP 404, source served: False",
+  "leak_markers_found": [],
+  "response": {
+    "open_status": 200,
+    "traversal_status": 404
+  }
+}

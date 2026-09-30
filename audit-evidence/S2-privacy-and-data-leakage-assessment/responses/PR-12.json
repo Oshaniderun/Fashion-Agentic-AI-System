@@ -1,0 +1,14 @@
+{
+  "test_id": "PR-12",
+  "timestamp_utc": "2026-09-28T15:50:06.506690+00:00",
+  "objective": "Token forgery: unsigned alg:none JWT claiming sub=1",
+  "expected_behaviour": "401; no data served",
+  "actual_behaviour": "HTTP 401 on alg:none forged JWT; data served: False",
+  "leak_markers_found": [],
+  "response": {
+    "status": 401,
+    "body": {
+      "detail": "Could not validate credentials."
+    }
+  }
+}

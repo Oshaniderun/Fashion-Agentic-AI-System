@@ -12,7 +12,6 @@ import { AgentStatusPage } from './pages/AgentStatus';
 import { Agent2Dashboard } from './pages/agent2/Agent2Dashboard';
 import { Agent2Search } from './pages/agent2/Agent2Search';
 import { Agent2ProductDetail } from './pages/agent2/Agent2ProductDetail';
-import { Agent2History } from './pages/agent2/Agent2History';
 import { Agent2StatusPage } from './pages/agent2/Agent2Status';
 import { BudgetPlanPage } from './pages/budget/BudgetPlanPage';
 import { BudgetAccountPage } from './pages/budget/BudgetAccountPage';
@@ -50,7 +49,6 @@ export default function App() {
             <Route path="/agent2" element={<Agent2Dashboard />} />
             <Route path="/agent2/search" element={<Agent2Search />} />
             <Route path="/agent2/products/:productId" element={<Agent2ProductDetail />} />
-            <Route path="/agent2/history" element={<Agent2History />} />
             <Route path="/agent2/status" element={<Agent2StatusPage />} />
             <Route path="/budget" element={<BudgetAccountPage />} />
             <Route path="/budget/:requestId" element={<BudgetPlanPage />} />
