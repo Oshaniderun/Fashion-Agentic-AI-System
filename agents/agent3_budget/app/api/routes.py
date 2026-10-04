@@ -15,6 +15,7 @@ Endpoints:
   GET  /budget/affiliate/redirect/{product_id}   (destination allow-listed)
   GET  /budget/affiliate/stats                   (service principals only)
   GET  /budget/affiliate/history/{user_id}
+  DELETE /budget/affiliate/history/{user_id} — erase a user's click history
   POST /budget/compare-options     — pandas side-by-side comparison
   GET  /budget/health
 """
@@ -642,6 +643,23 @@ async def affiliate_history(
     if not _is_service(principal):
         validate_tenant_access(principal.get("sub"), user_id)
     return {"user_id": user_id, "clicks": affiliate_svc.get_user_clicks(db, user_id, limit)}
+
+
+@budget_router.delete(
+    "/affiliate/history/{user_id}",
+    summary="Erase a user's affiliate click history",
+)
+async def clear_affiliate_history(
+    user_id: str,
+    principal: Dict[str, Any] = Depends(get_current_principal),
+    affiliate_svc: AffiliateService = Depends(get_affiliate_service),
+    db: Session = Depends(get_db),
+):
+    if not _is_service(principal):
+        validate_tenant_access(principal.get("sub"), user_id)
+    cleared = affiliate_svc.clear_user_clicks(db, user_id)
+    logger.info(scrub_pii(f"Affiliate history erased: user='{user_id}' rows={cleared}"))
+    return {"user_id": user_id, "cleared": cleared}
 
 
 # ---------------------------------------------------------------------------

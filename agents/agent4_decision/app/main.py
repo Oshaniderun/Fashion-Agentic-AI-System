@@ -7,8 +7,8 @@ service-token auth, /health probe, security headers, masked errors.
 
 Agent 4 is the decision layer: it combines the validated outputs of Agents
 1-3 into a single complete outfit recommendation with a confidence score and
-an explanation. It is stateless — no database, no re-derivation of other
-agents' work.
+an explanation. It never re-derives another agent's work, and it stores only a
+hash-keyed decision audit row (no request content, no user data).
 """
 
 import logging
@@ -97,5 +97,7 @@ def root():
 
 
 from app.api.routes import decision_router  # noqa: E402
+from app.api.audit_routes import audit_router  # noqa: E402
 
 app.include_router(decision_router)
+app.include_router(audit_router)

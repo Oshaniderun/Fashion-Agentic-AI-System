@@ -14,11 +14,9 @@ export function Agent2Dashboard() {
   const [entries, setEntries] = useState<SearchHistoryEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [tab, setTab] = useState<'overview' | 'lastjson'>('overview');
   const [openId, setOpenId] = useState<number | null>(null);
   const [detail, setDetail] = useState<SearchHistoryDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
-  const [lastEntry, setLastEntry] = useState<SearchHistoryDetail | null>(null);
 
   useEffect(() => {
     listSearchHistory()
@@ -26,21 +24,6 @@ export function Agent2Dashboard() {
       .catch((err) => setError(extractErrorMessage(err)))
       .finally(() => setLoading(false));
   }, []);
-
-  useEffect(() => {
-    const first = entries[0];
-    if (!first) {
-      setLastEntry(null);
-      return;
-    }
-    let active = true;
-    getSearchHistoryEntry(first.id)
-      .then((d) => active && setLastEntry(d))
-      .catch(() => active && setLastEntry(null));
-    return () => {
-      active = false;
-    };
-  }, [entries]);
 
   const toggle = useCallback(async (id: number) => {
     if (openId === id) {
@@ -93,50 +76,7 @@ export function Agent2Dashboard() {
 
       {error && <p className="form-error">{error}</p>}
 
-      <div className="row" style={{ marginBottom: '1rem' }}>
-        <button
-          type="button"
-          className={`chip ${tab === 'overview' ? 'active' : ''}`}
-          onClick={() => setTab('overview')}
-        >
-          Overview
-        </button>
-        <button
-          type="button"
-          className={`chip ${tab === 'lastjson' ? 'active' : ''}`}
-          onClick={() => setTab('lastjson')}
-        >
-          Last retrieval detail
-        </button>
-      </div>
-
-      {tab === 'lastjson' ? (
-        <div className="panel stack">
-          <h2 style={{ margin: 0 }}>Last saved retrieval</h2>
-          {lastEntry ? (
-            <>
-              <p className="meta" style={{ margin: 0 }}>
-                Actual stored data for{' '}
-                <strong style={{ textTransform: 'capitalize' }}>{lastEntry.category}</strong> ·{' '}
-                {lastEntry.created_at ? new Date(lastEntry.created_at).toLocaleString() : ''} ·{' '}
-                {lastEntry.query_text || 'no query text'}
-              </p>
-              <pre className="code-block">{JSON.stringify(lastEntry, null, 2)}</pre>
-            </>
-          ) : (
-            <p className="meta">
-              {loading ? 'Loading…' : 'No saved searches yet. Use '}
-              {!loading && (
-                <>
-                  <Link to="/agent2/search">Product Search</Link>, or retrieve from an{' '}
-                  <Link to="/request">analysis result</Link>.
-                </>
-              )}
-            </p>
-          )}
-        </div>
-      ) : (
-        <div className="panel">
+      <div className="panel">
           <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
             <h2 style={{ margin: 0 }}>Saved searches</h2>
             {entries.length > 0 && (
@@ -234,8 +174,7 @@ export function Agent2Dashboard() {
               </tbody>
             </table>
           )}
-        </div>
-      )}
+      </div>
     </div>
   );
 }

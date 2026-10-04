@@ -14,7 +14,7 @@ import { useAuth } from '../context/AuthContext';
 const LINKS = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { to: '/request', label: 'Fashion Request', icon: Sparkles },
-  { to: '/wardrobe', label: 'Wardrobe', icon: Shirt },
+  { to: '/wardrobe', label: 'Wardrobe', icon: Shirt, end: true },
   { to: '/wardrobe/add', label: 'Add Clothing', icon: PlusCircle },
   { to: '/agent2/search', label: 'Product Search', icon: Search },
   { to: '/agent2', label: 'Retrieval History', icon: Boxes, end: true },

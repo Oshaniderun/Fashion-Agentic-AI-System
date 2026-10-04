@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { LoadingSkeleton } from '../../components/LoadingSkeleton';
 import { ErrorAlert } from '../../components/ErrorAlert';
 import {
+  clearAffiliateHistory,
   getAffiliateHistory,
   getUsage,
   upgradeToPremium,
@@ -24,6 +25,7 @@ export function BudgetAccountPage() {
   const [error, setError] = useState('');
   const [upgrading, setUpgrading] = useState(false);
   const [upgradeNote, setUpgradeNote] = useState('');
+  const [clearing, setClearing] = useState(false);
 
   const load = useCallback(async () => {
     if (!user) return;
@@ -60,6 +62,21 @@ export function BudgetAccountPage() {
     }
   };
 
+  const clearViews = async () => {
+    if (!user) return;
+    if (!window.confirm('Clear your product views list? This cannot be undone.')) return;
+    setClearing(true);
+    setError('');
+    try {
+      await clearAffiliateHistory(user.id);
+      setClicks([]);
+    } catch (err) {
+      setError(extractErrorMessage(err));
+    } finally {
+      setClearing(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="page">
@@ -77,48 +94,57 @@ export function BudgetAccountPage() {
 
       <ErrorAlert message={error} />
 
-      <div className="split-2">
-        <div className="panel stack">
-          <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
-            <h2 style={{ margin: 0 }}>This month</h2>
-            <span className={`badge ${usage?.tier === 'premium' ? 'badge-ok' : 'badge-muted'}`}>
-              {usage?.tier ?? 'free'}
-            </span>
+      {usage && (
+        <div className="grid-stats grid-stats-auto">
+          <div className="stat">
+            <div className="label">Plans used</div>
+            <div className="value">{usage.recommendations_used}</div>
+            <div className="meta">
+              {usage.monthly_limit === -1
+                ? 'unlimited plan'
+                : `of ${usage.monthly_limit} this month`}
+            </div>
           </div>
-          {usage && (
-            <>
-              <p style={{ margin: 0 }}>
-                {usage.recommendations_used} of{' '}
-                {usage.monthly_limit === -1 ? 'unlimited' : usage.monthly_limit} plans used ·{' '}
-                {usage.monthly_limit === -1
-                  ? 'no limit'
-                  : `${Math.max(usage.monthly_limit - usage.recommendations_used, 0)} left`}
-              </p>
-              {usage.tier === 'free' && (
-                <>
-                  <p className="meta" style={{ margin: 0 }}>
-                    Premium: {usage.premium_benefits.join('; ')} —{' '}
-                    {formatUsd(usage.premium_price_usd)}/month.
-                  </p>
-                  <div>
-                    <button
-                      type="button"
-                      className="btn btn-primary"
-                      onClick={() => void upgrade()}
-                      disabled={upgrading}
-                    >
-                      {upgrading ? 'Upgrading…' : 'Upgrade to premium'}
-                    </button>
-                  </div>
-                </>
-              )}
-              {upgradeNote && <p className="meta" style={{ margin: 0 }}>{upgradeNote}</p>}
-            </>
-          )}
+          <div className="stat">
+            <div className="label">Left this month</div>
+            <div className="value">
+              {usage.recommendations_remaining === -1 ? '∞' : usage.recommendations_remaining}
+            </div>
+            <div className="meta">{monthLabel(usage.month)}</div>
+          </div>
+          <div className="stat">
+            <div className="label">Product views</div>
+            <div className="value">{clicks.length}</div>
+            <div className="meta">{usage.tier === 'premium' ? 'premium' : 'free'} plan</div>
+          </div>
         </div>
+      )}
 
-        <div className="panel stack">
-          <h2 style={{ margin: 0 }}>Saved plans</h2>
+      {usage?.tier === 'free' && (
+        <div className="panel" style={{ marginTop: '1rem' }}>
+          <div className="row" style={{ justifyContent: 'space-between' }}>
+            <div>
+              <p style={{ margin: 0 }}>
+                Premium — {usage.premium_benefits.join('; ')} —{' '}
+                {formatUsd(usage.premium_price_usd)}/month.
+              </p>
+              {upgradeNote && <p className="meta" style={{ margin: 0 }}>{upgradeNote}</p>}
+            </div>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => void upgrade()}
+              disabled={upgrading}
+            >
+              {upgrading ? 'Upgrading…' : 'Upgrade to premium'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className="split-2" style={{ marginTop: '1rem', alignItems: 'start' }}>
+        <div className="panel">
+          <h2>Saved plans</h2>
           {plans.length === 0 ? (
             <p className="meta">
               No plans built in this browser session yet. Run a{' '}
@@ -126,13 +152,12 @@ export function BudgetAccountPage() {
               plan.
             </p>
           ) : (
-            <table style={{ width: '100%' }}>
+            <table className="table-fixed">
               <thead>
                 <tr>
-                  <th style={{ textAlign: 'left' }} className="meta">When</th>
-                  <th style={{ textAlign: 'left' }} className="meta">Request</th>
-                  <th style={{ textAlign: 'left' }} className="meta">Ceiling</th>
-                  <th style={{ textAlign: 'left' }} className="meta">Status</th>
+                  <th className="meta">Request</th>
+                  <th className="meta" style={{ width: 118 }}>Ceiling</th>
+                  <th className="meta" style={{ width: 152 }}>Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -145,18 +170,22 @@ export function BudgetAccountPage() {
                     : null;
                   return (
                     <tr key={p.request_id}>
-                      <td className="meta">{new Date(p.at).toLocaleTimeString()}</td>
                       <td>
-                        <Link to={`/budget/${encodeURIComponent(p.request_id)}`}>
+                        <Link to={`/budget/${encodeURIComponent(p.request_id)}`} className="clip">
                           {p.query_label || p.request_id}
                         </Link>
+                        <div className="meta">{new Date(p.at).toLocaleTimeString()}</div>
                       </td>
-                      <td>{formatUsd(p.budget_ceiling)}</td>
+                      <td className="num">{formatUsd(p.budget_ceiling)}</td>
                       <td>
                         {m ? (
-                          <span className={m.badgeClass}>{m.label}</span>
+                          <span className={m.badgeClass} style={{ whiteSpace: 'nowrap' }}>
+                            {m.label}
+                          </span>
                         ) : (
-                          <span className="badge badge-muted">{p.status}</span>
+                          <span className="badge badge-muted" style={{ whiteSpace: 'nowrap' }}>
+                            {p.status}
+                          </span>
                         )}
                       </td>
                     </tr>
@@ -166,49 +195,60 @@ export function BudgetAccountPage() {
             </table>
           )}
         </div>
-      </div>
 
-      <div className="panel">
-        <h2>Product views</h2>
-        {clicks.length === 0 ? (
-          <p className="meta">
-            You haven&rsquo;t opened a product from a budget plan in this account yet.
-          </p>
-        ) : (
-          <table style={{ width: '100%' }}>
-            <thead>
-              <tr>
-                <th style={{ textAlign: 'left' }} className="meta">When</th>
-                <th style={{ textAlign: 'left' }} className="meta">Product</th>
-                <th style={{ textAlign: 'left' }} className="meta">Store</th>
-                <th style={{ textAlign: 'left' }} className="meta">Price</th>
-              </tr>
-            </thead>
-            <tbody>
-              {clicks.map((c, i) => {
-                const safeUrl =
-                  c.product_url && /^https:\/\//i.test(c.product_url) ? c.product_url : null;
-                return (
-                  <tr key={`${c.product_id}-${c.clicked_at}-${i}`}>
-                    <td className="meta">{new Date(c.clicked_at).toLocaleString()}</td>
-                    <td>
-                      {safeUrl ? (
-                        <a href={safeUrl} target="_blank" rel="noopener noreferrer">
-                          {c.product_name ?? c.product_id}
-                        </a>
-                      ) : (
-                        (c.product_name ?? c.product_id)
-                      )}
-                    </td>
-                    <td>{c.store ?? '—'}</td>
-                    <td>{formatUsd(c.price_usd) ?? 'not listed'}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        )}
+        <div className="panel">
+          <div
+            className="row"
+            style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}
+          >
+            <h2 style={{ margin: 0 }}>Product views</h2>
+            {clicks.length > 0 && (
+              <button
+                type="button"
+                className="btn btn-ghost"
+                onClick={() => void clearViews()}
+                disabled={clearing}
+              >
+                {clearing ? 'Clearing…' : 'Clear'}
+              </button>
+            )}
+          </div>
+          {clicks.length === 0 ? (
+            <p className="meta">You haven&rsquo;t opened a product listing in this account yet.</p>
+          ) : (
+            <table className="table-fixed">
+              <thead>
+                <tr>
+                  <th className="meta">Product</th>
+                  <th className="meta" style={{ width: 104 }}>Price</th>
+                </tr>
+              </thead>
+              <tbody>
+                {clicks.map((c, i) => {
+                  const label = c.product_name ?? c.product_id;
+                  return (
+                    <tr key={`${c.product_id}-${c.clicked_at}-${i}`}>
+                      <td>
+                        <span className="clip">{label}</span>
+                        <div className="meta">
+                          {c.store ?? '—'} · {new Date(c.clicked_at).toLocaleString()}
+                        </div>
+                      </td>
+                      <td className="num">{formatUsd(c.price_usd) ?? 'not listed'}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+        </div>
       </div>
     </div>
   );
+}
+
+function monthLabel(month: string): string {
+  const date = new Date(`${month}-01T00:00:00`);
+  if (Number.isNaN(date.getTime())) return month;
+  return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 }

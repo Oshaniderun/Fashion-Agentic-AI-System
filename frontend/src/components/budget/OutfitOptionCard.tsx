@@ -1,49 +1,25 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ShoppingBag, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import type {
   BudgetSource,
   BudgetStatus,
-  CandidateProductItem,
   OutfitOption,
   RetrievalRetryLog,
 } from '../../types/budget';
 import { formatUsd, budgetStatusMeta, strategyLabel } from '../../services/budgetFormat';
-import { trackProductClick } from '../../services/budgetService';
 import { extractErrorMessage } from '../../services/api';
 
 interface Props {
   requestId: string;
-  userId?: number | null;
   option: OutfitOption;
   recommended: boolean;
 }
 
 /** One outfit option: cost breakdown, purchased products, reused wardrobe. */
-export function OutfitOptionCard({ requestId, userId, option, recommended }: Props) {
+export function OutfitOptionCard({ requestId, option, recommended }: Props) {
   const [open, setOpen] = useState(false);
   const cb = option.cost_breakdown;
-
-  const openTracked = async (p: CandidateProductItem) => {
-    const target = p.url;
-    try {
-      await trackProductClick({
-        product_id: p.product_id,
-        product_name: p.name,
-        product_url: target ?? null,
-        store: p.store ?? null,
-        category: p.category,
-        price_usd: p.price ?? null,
-        request_id: requestId,
-        user_id: userId != null ? String(userId) : undefined,
-      });
-    } catch {
-      /* tracking is best-effort; the user still gets their link */
-    }
-    if (target) {
-      window.open(target, '_blank', 'noopener,noreferrer');
-    }
-  };
 
   return (
     <div className="panel stack">
@@ -126,15 +102,6 @@ export function OutfitOptionCard({ requestId, userId, option, recommended }: Pro
                     >
                       Details
                     </Link>
-                    {p.url && (
-                      <button
-                        type="button"
-                        className="btn btn-secondary"
-                        onClick={() => void openTracked(p)}
-                      >
-                        <ShoppingBag size={14} /> View
-                      </button>
-                    )}
                   </div>
                 </div>
               ))}

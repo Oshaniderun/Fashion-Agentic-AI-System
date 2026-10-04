@@ -3,8 +3,8 @@ Agent 4 HTTP surface: /decision/* routes.
 
 Caller-supplies-payloads design (same precedent as Agent 3's plan-purchases
 adapter): the orchestrator/frontend posts the cached Agent 1 output, the
-Agent 2 retrieval responses and the Agent 3 budget response. Agent 4 makes
-no outbound calls to the other services and touches no database.
+Agent 2 retrieval responses and the Agent 3 budget response. Agent 4 makes no outbound calls to the other services and reads no shared
+database; the only thing it persists is the hash-keyed decision audit log.
 """
 
 import logging
@@ -14,12 +14,16 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from app.api.dependencies import enforce_tenant_access, get_current_principal
 from app.core.security import scrub_pii
+from app.schemas.agent4_extensions import (
+    DecisionRequestExtended,
+    DecisionResponseExtended,
+)
+from app.services import audit_service, decision_extras
 from app.services.decision_service import get_decision_service
 from shared.schemas.agent4_schemas import (
     AlternativesResponse,
     DecisionAnalysisResponse,
     DecisionRequest,
-    DecisionResponse,
 )
 
 logger = logging.getLogger("decision_routes")
@@ -38,18 +42,19 @@ def _check_input(request: DecisionRequest) -> None:
         )
 
 
-@decision_router.post("/recommend", response_model=DecisionResponse)
+@decision_router.post("/recommend", response_model=DecisionResponseExtended)
 def recommend(
-    request: DecisionRequest,
+    request: DecisionRequestExtended,
     llm_polish: bool = Query(False, description="Polish the explanation with Gemini; the decision is unchanged."),
     principal: dict = Depends(get_current_principal),
-) -> DecisionResponse:
+) -> DecisionResponseExtended:
     """Decide the final outfit from validated upstream payloads."""
     enforce_tenant_access(principal, request.user_id)
     _check_input(request)
 
     service = get_decision_service()
     response, evaluated = service.decide(request)
+    template_explanation = response.explanation
 
     if llm_polish and response.selected_combination_id:
         chosen = next(
@@ -67,7 +72,16 @@ def recommend(
             )
             response.explanation = polished
 
-    return response
+    extended = decision_extras.decorate(
+        request,
+        response,
+        evaluated,
+        service=service,
+        reoptimization_round=request.reoptimization_round,
+        template_explanation=template_explanation,
+    )
+    extended.decision_id = audit_service.record(request, extended)
+    return extended
 
 
 @decision_router.post("/analyze", response_model=DecisionAnalysisResponse)

@@ -170,7 +170,7 @@ export function ImageCropper({ src, disabled, onCancel, onCropped }: Props) {
             width: box.w * scale,
             height: box.h * scale,
             border: '2px solid var(--accent)',
-            boxShadow: '0 0 0 9999px rgba(18, 24, 31, 0.45)',
+            boxShadow: '0 0 0 9999px var(--overlay-ink)',
             cursor: 'move',
             borderRadius: 4,
           }}
@@ -184,7 +184,7 @@ export function ImageCropper({ src, disabled, onCancel, onCropped }: Props) {
                 position: 'absolute',
                 width: 14,
                 height: 14,
-                background: '#fff',
+                background: 'var(--color-white)',
                 border: '2px solid var(--accent)',
                 borderRadius: 2,
                 ...(corner === 'nw' ? { left: -7, top: -7, cursor: 'nwse-resize' } : {}),

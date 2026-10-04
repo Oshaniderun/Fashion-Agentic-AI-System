@@ -91,6 +91,15 @@ export async function getAffiliateHistory(
   return data;
 }
 
+export async function clearAffiliateHistory(
+  userId: string | number
+): Promise<{ user_id: string; cleared: number }> {
+  const { data } = await api.delete(
+    `/budget/affiliate/history/${encodeURIComponent(String(userId))}`
+  );
+  return data;
+}
+
 export async function trackProductClick(payload: {
   product_id: string;
   product_name?: string | null;

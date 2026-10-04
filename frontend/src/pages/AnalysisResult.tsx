@@ -25,7 +25,6 @@ export function AnalysisResult() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [data, setData] = useState<FashionAnalysisResponse | null>(null);
-  const [tab, setTab] = useState<'overview' | 'handoff'>('overview');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [handoff, setHandoff] = useState<HandoffRetrievalResponse | null>(null);
@@ -163,37 +162,7 @@ export function AnalysisResult() {
         </p>
       </div>
 
-      <div className="row" style={{ marginBottom: '1rem' }}>
-        <button
-          type="button"
-          className={`chip ${tab === 'overview' ? 'active' : ''}`}
-          onClick={() => setTab('overview')}
-        >
-          Overview
-        </button>
-        <button
-          type="button"
-          className={`chip ${tab === 'handoff' ? 'active' : ''}`}
-          onClick={() => setTab('handoff')}
-        >
-          Handoff by Agent 1
-        </button>
-      </div>
-
-      {tab === 'handoff' ? (
-        <div className="panel stack">
-          <div className="row" style={{ justifyContent: 'space-between' }}>
-            <h2 style={{ margin: 0 }}>Handoff by Agent 1</h2>
-            <p className="meta" style={{ margin: 0 }}>
-              Structured package Agent 2 should consume (requirements + wardrobe gaps + search brief).
-            </p>
-          </div>
-          <pre className="code-block">
-            {JSON.stringify(data.agent2_handoff ?? data.search_requirements, null, 2)}
-          </pre>
-        </div>
-      ) : (
-        <div className="stack">
+      <div className="stack">
           <div className="panel">
             <h2>Request</h2>
             <p style={{ margin: 0 }}>&ldquo;{data.input_text}&rdquo;</p>
@@ -422,7 +391,6 @@ export function AnalysisResult() {
           </>
           )}
         </div>
-      )}
     </div>
   );
 }

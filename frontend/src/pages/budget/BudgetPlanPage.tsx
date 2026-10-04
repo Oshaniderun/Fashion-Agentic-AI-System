@@ -116,7 +116,6 @@ export function BudgetPlanPage() {
               <OutfitOptionCard
                 key={o.combination_id}
                 requestId={plan.request_id}
-                userId={user?.id ?? null}
                 option={o}
                 recommended={recommended?.combination_id === o.combination_id}
               />

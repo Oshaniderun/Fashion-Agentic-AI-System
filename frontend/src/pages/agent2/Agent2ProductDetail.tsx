@@ -1,9 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { ShoppingBag } from 'lucide-react';
 import { ErrorAlert } from '../../components/ErrorAlert';
 import { LoadingSkeleton } from '../../components/LoadingSkeleton';
+import { useAuth } from '../../context/AuthContext';
 import { getAgent2Product } from '../../services/agent2Service';
 import { describeHttpError } from '../../services/agent2Format';
+import { storeUrl } from '../../services/budgetFormat';
+import { trackProductClick } from '../../services/budgetService';
 import { extractErrorMessage, imageUrl } from '../../services/api';
 import type { Agent2Product } from '../../types/agent2';
 
@@ -22,6 +26,7 @@ function Row({ label, value }: { label: string; value: string | number | boolean
 export function Agent2ProductDetail() {
   const { productId } = useParams();
   const [searchParams] = useSearchParams();
+  const { user } = useAuth();
   const origin = searchParams.get('from');
   // Return to the page that linked here (e.g. the analysis result list) when known.
   const fromValid = !!origin && origin.startsWith('/') && !origin.startsWith('//');
@@ -67,6 +72,30 @@ export function Agent2ProductDetail() {
   }
 
   const img = imageUrl(product.image_url);
+  const listingUrl = storeUrl(product.product_id, product.product_url);
+  // Only a visit that came from a plan can attribute the click to one.
+  const planRequestId = origin?.startsWith('/budget/')
+    ? decodeURIComponent(origin.slice('/budget/'.length))
+    : null;
+
+  const openListing = async () => {
+    if (!listingUrl) return;
+    try {
+      await trackProductClick({
+        product_id: product.product_id,
+        product_name: product.product_name,
+        product_url: listingUrl,
+        store: product.store ?? null,
+        category: product.category ?? null,
+        price_usd: product.price ?? null,
+        request_id: planRequestId,
+        user_id: user?.id != null ? String(user.id) : undefined,
+      });
+    } catch {
+      /* tracking is best-effort; the user still gets their link */
+    }
+    window.open(listingUrl, '_blank', 'noopener,noreferrer');
+  };
 
   return (
     <div className="page">
@@ -100,11 +129,11 @@ export function Agent2ProductDetail() {
               {product.description}
             </p>
           )}
-          {product.product_url ? (
+          {listingUrl ? (
             <div className="row" style={{ marginTop: 12 }}>
-              <a className="btn btn-secondary" href={product.product_url} target="_blank" rel="noreferrer noopener">
-                Open listing
-              </a>
+              <button type="button" className="btn btn-secondary" onClick={() => void openListing()}>
+                <ShoppingBag size={14} /> View listing
+              </button>
             </div>
           ) : (
             <p className="meta" style={{ marginTop: 10 }}>

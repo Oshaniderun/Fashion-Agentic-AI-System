@@ -98,9 +98,10 @@ class ExplanationService:
         # 6. Trade-off vs the runner-up
         if alternatives:
             runner = alternatives[0]
+            # Positive diff means the runner-up costs MORE than the chosen option.
             diff_cost = runner.option.cost_breakdown.total_cost - cb.total_cost
             if abs(diff_cost) >= 0.005:
-                side = "cheaper" if diff_cost > 0 else "more expensive"
+                side = "more expensive" if diff_cost > 0 else "cheaper"
                 sentences.append(
                     f"The next-best alternative (\u201c{_clip(runner.option.name, 60)}\u201d) is "
                     f"{_usd(abs(diff_cost))} {side} but matched your style and colour preferences less well."

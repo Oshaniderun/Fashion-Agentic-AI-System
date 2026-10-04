@@ -152,6 +152,32 @@ def test_explanation_cites_real_numbers_and_no_invented_items(client, auth_heade
     assert "agent" not in text.lower()  # user-facing voice is FASHORA, not internals
 
 
+def test_runner_up_cost_direction_is_named_correctly(client, auth_headers):
+    # Chosen outfit and runner-up differ only in price here, so the adjective
+    # in the trade-off sentence is the thing under test. Relevance decides
+    # which one wins, so both directions are reachable on the same two prices.
+    def request(winner_price: float, loser_price: float):
+        win = P.product("P-WIN", price=winner_price, relevance=0.99)
+        lose = P.product("P-LOSE", price=loser_price, relevance=0.40)
+        return P.decision_request(
+            options=[
+                P.option("OPT-ONE", products=[P.candidate(win)], efficiency=0.9),
+                P.option("OPT-TWO", products=[P.candidate(lose)], efficiency=0.3),
+            ],
+            products_by_category={"top": [win, lose]},
+        )
+
+    dearer_runner = _recommend(client, auth_headers, request(45.0, 120.0)).json()
+    assert dearer_runner["selected_combination_id"] == "OPT-ONE"
+    assert "USD 75.00 more expensive" in dearer_runner["explanation"]
+    assert "USD 75.00 cheaper" not in dearer_runner["explanation"]
+
+    cheaper_runner = _recommend(client, auth_headers, request(120.0, 45.0)).json()
+    assert cheaper_runner["selected_combination_id"] == "OPT-ONE"
+    assert "USD 75.00 cheaper" in cheaper_runner["explanation"]
+    assert "USD 75.00 more expensive" not in cheaper_runner["explanation"]
+
+
 def test_llm_polish_falls_back_to_deterministic_in_mock_mode(client, auth_headers):
     prod = P.product("P1", price=45.0)
     req = P.decision_request(options=[P.option("OPT-A", products=[P.candidate(prod)])],

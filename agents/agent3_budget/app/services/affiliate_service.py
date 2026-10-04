@@ -157,6 +157,15 @@ class AffiliateService:
             for c in clicks
         ]
 
+    def clear_user_clicks(self, db: Session, user_id: str) -> int:
+        """Delete every recorded click belonging to one user; return how many."""
+        deleted = (
+            db.query(AffiliateClick).filter(AffiliateClick.user_id == user_id).delete()
+        )
+        db.commit()
+        logger.info(f"Affiliate click history cleared for user={user_id} rows={deleted}")
+        return int(deleted)
+
 
 _affiliate_service = AffiliateService()
 

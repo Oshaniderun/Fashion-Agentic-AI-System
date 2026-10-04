@@ -1,0 +1,102 @@
+/* ============================================================================
+   FASHORA design tokens — single source of truth for the visual theme.
+   Every colour, radius, shadow and blur used anywhere in the app resolves
+   through a variable declared here. Component rules live in ../index.css.
+   ========================================================================== */
+
+:root {
+  /* ---- palette ---- */
+  --color-navy: #1d2850; /* sidebar background, strong headings */
+  --color-indigo: #2d356a; /* secondary dark elements, primary text */
+  --color-primary: #6969c3; /* buttons, icons, active states */
+  --color-lavender: #a5a5d8; /* secondary accents, borders */
+  --color-lavender-light: #e3e8f7; /* cards, subtle backgrounds */
+  --color-pale-blue: #cad5ec; /* blue accents, decorative areas */
+  --color-bg: #f7f8fe; /* main dashboard background */
+  --color-white: #fefefe; /* cards and panels */
+  --color-gray-soft: #f2f3fc; /* input and background areas */
+  --color-text-muted: #696f8e; /* secondary text */
+  --color-text: #2d356a; /* main text and headings */
+
+  /* ---- shape, depth, glass ---- */
+  --radius-card: 20px;
+  --radius-button: 14px;
+  --shadow-card: 0 8px 24px rgba(29, 40, 80, 0.1);
+  --shadow-card-hover: 0 14px 34px rgba(29, 40, 80, 0.16);
+  --blur-glass: 14px;
+  --glass-bg: rgba(254, 254, 254, 0.72);
+  --glass-border: rgba(165, 165, 216, 0.45);
+
+  /* ---- derived helpers (all built from the palette above) ---- */
+  --glass-bg-strong: rgba(254, 254, 254, 0.86);
+  --glass-hover: rgba(105, 105, 195, 0.09);
+  --glass-active: rgba(105, 105, 195, 0.35);
+  --primary-deep: #55559f; /* --color-primary darkened for hover, kept in family */
+  --sidebar-grad: linear-gradient(180deg, var(--color-navy) 0%, var(--color-indigo) 100%);
+  --cta-grad: linear-gradient(100deg, var(--color-indigo), var(--color-primary));
+  --focus-ring: 2px solid var(--color-primary);
+  --overlay-ink: rgba(29, 40, 80, 0.45);
+  --decor-pale: rgba(202, 213, 236, 0.16);
+  --skeleton-base: var(--color-lavender-light);
+  --skeleton-shine: rgba(254, 254, 254, 0.75);
+
+  /* ---- alpha variants (pre-computed so no colour maths is needed) ---- */
+  --body-glow-a: rgba(202, 213, 236, 0.55);
+  --body-glow-b: rgba(165, 165, 216, 0.3);
+  --decor-leaf: rgba(202, 213, 236, 0.18);
+  --decor-glow: rgba(165, 165, 216, 0.34);
+  --auth-glow: rgba(202, 213, 236, 0.3);
+  --nav-text: rgba(254, 254, 254, 0.9);
+  --nav-hover: rgba(254, 254, 254, 0.12);
+  --nav-inner-line: rgba(254, 254, 254, 0.08);
+  --foot-bg: rgba(254, 254, 254, 0.08);
+  --foot-btn-hover: rgba(254, 254, 254, 0.22);
+  --primary-glow: rgba(105, 105, 195, 0.32);
+  --primary-ring: rgba(105, 105, 195, 0.18);
+  --thumb-shadow: rgba(29, 40, 80, 0.3);
+  --code-bg: #202a52;
+
+  /* ---- semantic status (deliberately outside the brand palette) ---- */
+  --ok: #1b6b45;
+  --ok-soft: #e0f3e8;
+  --ok-line: #b9e2c9;
+  --warn: #8a5a12;
+  --warn-soft: #fbeed4;
+  --warn-line: #ecd6a8;
+  --danger: #a33a4a;
+  --danger-soft: #fae4e8;
+  --danger-line: #eec3cc;
+  --amber: #b4863a;
+
+  /* ---- legacy aliases: existing component rules keep working, but now
+          resolve to the new palette instead of the old teal/ink scheme ---- */
+  --ink: var(--color-text);
+  --ink-soft: var(--color-text);
+  --muted: var(--color-text-muted);
+  --line: var(--color-lavender);
+  --line-soft: var(--color-lavender-light);
+  --surface: var(--color-gray-soft);
+  --surface-raised: var(--color-white);
+  --accent: var(--color-primary);
+  --accent-deep: var(--color-indigo);
+  --accent-soft: var(--color-lavender-light);
+  --shadow: var(--shadow-card);
+  --radius: var(--radius-button);
+  --nav-w: 264px;
+  --font-display: "Fraunces", Georgia, serif;
+  --font-body: "DM Sans", system-ui, sans-serif;
+
+  /* ---- swappable page background ----------------------------------------
+     To enable a photo: drop it in frontend/public/backgrounds/ and change
+     the line below to
+         --app-bg-image: url('/backgrounds/your-image.jpg');
+     Alternatively set VITE_APP_BG_IMAGE=/backgrounds/your-image.jpg in
+     frontend/.env — main.tsx applies it to this variable at startup.
+     ---------------------------------------------------------------------- */
+  --app-bg-image: none;
+  --app-bg-overlay: linear-gradient(
+    180deg,
+    rgba(247, 248, 254, 0.78),
+    rgba(247, 248, 254, 0.88)
+  );
+}

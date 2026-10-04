@@ -52,7 +52,7 @@ export function FashionRequestForm({ onSubmit, loading }: Props) {
             <button
               key={p}
               type="button"
-              className={`chip ${query === p ? 'active' : ''}`}
+              className="chip"
               onClick={() => setQuery(p)}
             >
               {p.length > 48 ? `${p.slice(0, 48)}…` : p}

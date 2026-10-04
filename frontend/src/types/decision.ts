@@ -24,6 +24,7 @@ export interface DecisionRequest {
   retrieval_by_category: Record<string, RetrievalResponse>;
   user_id?: string | number | null;
   prefer_minimal_purchases?: boolean;
+  reoptimization_round?: number;
 }
 
 export interface OutfitPiece {
@@ -90,6 +91,68 @@ export interface CandidateMetrics {
   decision_score: number;
 }
 
+// --- Decision transparency extensions (additive; every field optional) ---
+
+export interface SubScores {
+  colour_harmony: number;
+  formality_match: number;
+  occasion_fit: number;
+  budget_fit: number;
+  constraint_satisfaction: number;
+}
+
+export type SubScoreKey = keyof SubScores;
+
+export interface ScoredCandidate {
+  combination_id: string;
+  rank: number;
+  selected: boolean;
+  sub_scores: SubScores;
+  weights: Record<SubScoreKey, number>;
+  weights_version: string;
+  overall_score: number;
+  decision_score: number;
+}
+
+export type RejectReasonCode =
+  | 'STYLE_CLASH'
+  | 'MISSING_REQUIRED_CATEGORY'
+  | 'OVER_BUDGET'
+  | 'CONSTRAINT_VIOLATION'
+  | 'LOW_CONFIDENCE'
+  | 'INCOMPLETE_OUTFIT';
+
+export type SuggestedAction =
+  | 'retry_with_exclusions'
+  | 'increase_budget'
+  | 'relax_constraints'
+  | 'accept_best_available'
+  | 'request_clarification';
+
+export interface CandidateRejection {
+  combination_id: string;
+  name: string;
+  reason_codes: RejectReasonCode[];
+  detail?: string | null;
+  product_ids: string[];
+}
+
+export type CounterfactualKind =
+  | 'budget_increase'
+  | 'no_budget_change'
+  | 'item_swap'
+  | 'sub_score_flip';
+
+export interface Counterfactual {
+  kind: CounterfactualKind;
+  field: string;
+  old_value?: string | number | null;
+  new_value?: string | number | null;
+  resulting_winner?: string | null;
+  sub_score?: string | null;
+  sentence: string;
+}
+
 export interface DecisionResponse {
   request_id: string;
   decision: DecisionOutcome;
@@ -104,4 +167,17 @@ export interface DecisionResponse {
   explanation: string;
   validation_issues: ValidationIssue[];
   currency: string;
+  score_breakdown?: ScoredCandidate[];
+  reason_codes?: RejectReasonCode[];
+  candidate_rejections?: CandidateRejection[];
+  excluded_product_ids?: string[];
+  suggested_action?: SuggestedAction | null;
+  reoptimization_round?: number;
+  retry_limit_reached?: boolean;
+  retry_limit_reason?: string | null;
+  explanation_source?: 'template' | 'llm' | null;
+  explanation_verified?: boolean | null;
+  verification_issues?: string[];
+  counterfactuals?: Counterfactual[];
+  decision_id?: string | null;
 }

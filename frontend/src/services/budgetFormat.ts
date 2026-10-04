@@ -50,6 +50,15 @@ export function budgetStatusMeta(
   }
 }
 
+/**
+ * Catalogue ids are Amazon ASINs, but the dataset's url column is empty for
+ * every row, so the store link is derived from the ASIN itself.
+ */
+export function storeUrl(productId: string, listed?: string | null): string | null {
+  if (listed) return listed;
+  return /^[A-Z0-9]{10}$/.test(productId) ? `https://www.amazon.com/dp/${productId}` : null;
+}
+
 export const STRATEGY_LABELS: Record<string, string> = {
   buy_nothing: 'Buy nothing',
   best_value: 'Best value',

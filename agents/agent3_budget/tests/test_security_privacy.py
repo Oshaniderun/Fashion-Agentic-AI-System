@@ -102,6 +102,22 @@ def test_service_token_usage_not_counted(client, auth_headers):
     assert r.json()["recommendations_used"] == 0
 
 
+def test_idor_blocks_cross_user_affiliate_history_read(client):
+    tok = create_access_token(42)
+    assert client.get("/budget/affiliate/history/99", headers=_bearer(tok)).status_code == 403
+
+
+def test_idor_blocks_cross_user_affiliate_history_erase(client):
+    tok = create_access_token(42)
+    assert client.delete("/budget/affiliate/history/99", headers=_bearer(tok)).status_code == 403
+
+
+def test_service_may_erase_any_user_affiliate_history(client, auth_headers):
+    r = client.delete("/budget/affiliate/history/99", headers=auth_headers)
+    assert r.status_code == 200
+    assert r.json()["cleared"] == 0
+
+
 def test_pii_scrubbing():
     assert "[REDACTED_FINANCIAL_CARD]" in scrub_pii("card 4111 1111 1111 1111")
     assert "[REDACTED_EMAIL]" in scrub_pii("reach me at a@b.com")

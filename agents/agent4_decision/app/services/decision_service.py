@@ -20,6 +20,7 @@ import re
 from typing import Dict, List, Optional, Tuple
 
 from app.core.config import get_settings
+from app.schemas.agent4_extensions import RejectReasonCode
 from app.services.explanation_service import get_explanation_service
 from app.services.validation_service import ValidationService, get_validation_service
 from shared.schemas.agent2_schemas import ProductResult
@@ -136,6 +137,9 @@ class EvaluatedOption:
     trust_warnings: List[str] = field(default_factory=list)
     # (category, requested types, piece names that failed to match)
     type_mismatches: List[Tuple[str, List[str], List[str]]] = field(default_factory=list)
+    # Machine-readable reason for `rejection` (Feature 2). Never changes whether
+    # an option passed — it only labels the rejection that was already taken.
+    rejection_codes: List[str] = field(default_factory=list)
 
 
 class DecisionService:
@@ -275,6 +279,7 @@ class DecisionService:
 
         # ---------- hard constraints (order = priority) ----------
         rejection: Optional[str] = None
+        rejection_codes: List[str] = []
 
         untrustworthy = [
             cp.product_id
@@ -288,6 +293,7 @@ class DecisionService:
                 "Contains products that could not be verified against the retrieved "
                 "catalogue data: " + ", ".join(sorted(untrustworthy))
             )
+            rejection_codes = [RejectReasonCode.CONSTRAINT_VIOLATION.value]
 
         if rejection is None:
             bad_colour = next(
@@ -300,14 +306,17 @@ class DecisionService:
             )
             if bad_colour:
                 rejection = f"Includes '{bad_colour}', a colour the user asked to exclude"
+                rejection_codes = [RejectReasonCode.STYLE_CLASH.value]
 
         if rejection is None and not opt.is_within_budget:
             rejection = "Over budget (budget feasibility comes from the purchase planner)"
+            rejection_codes = [RejectReasonCode.OVER_BUDGET.value]
 
         if rejection is None:
             unavailable = [p.name for p in pieces if p.availability is False]
             if unavailable:
                 rejection = "Contains unavailable item(s): " + ", ".join(unavailable[:3])
+                rejection_codes = [RejectReasonCode.CONSTRAINT_VIOLATION.value]
 
         # ---------- completeness ----------
         covered = {p.category for p in pieces if p.category in required}
@@ -348,6 +357,7 @@ class DecisionService:
             rejection=rejection,
             trust_warnings=trust_warnings,
             type_mismatches=type_mismatches,
+            rejection_codes=rejection_codes,
         )
 
     # ------------------------------------------------------------------

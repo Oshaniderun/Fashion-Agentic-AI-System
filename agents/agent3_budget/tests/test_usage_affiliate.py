@@ -96,6 +96,37 @@ def test_tracked_url_and_history(db):
     assert "price_usd" in history[0]
 
 
+def test_clear_user_clicks_only_touches_that_user(db):
+    svc = get_affiliate_service()
+    for uid in ("ca", "ca", "cb"):
+        svc.record_click(
+            db, product_id=f"P-{uid}", product_name=None, product_url=None,
+            store=None, category=None, price_usd=None, user_id=uid,
+        )
+    assert svc.clear_user_clicks(db, "ca") == 2
+    assert svc.get_user_clicks(db, "ca") == []
+    assert len(svc.get_user_clicks(db, "cb")) == 1
+
+
+def test_affiliate_history_delete_route(client, user_headers):
+    tracked = client.post(
+        "/budget/affiliate/track-click",
+        json={"product_id": "PDEL", "product_url": "https://www.amazon.com/dp/PDEL"},
+        headers=user_headers,
+    )
+    assert tracked.status_code == 200
+    assert client.get("/budget/affiliate/history/42", headers=user_headers).json()["clicks"]
+
+    cleared = client.delete("/budget/affiliate/history/42", headers=user_headers)
+    assert cleared.status_code == 200
+    assert cleared.json()["cleared"] == 1
+    assert client.get("/budget/affiliate/history/42", headers=user_headers).json()["clicks"] == []
+
+
+def test_affiliate_history_delete_requires_auth(client):
+    assert client.delete("/budget/affiliate/history/42").status_code == 401
+
+
 def test_click_stats_aggregation(db):
     svc = get_affiliate_service()
     for i in range(3):

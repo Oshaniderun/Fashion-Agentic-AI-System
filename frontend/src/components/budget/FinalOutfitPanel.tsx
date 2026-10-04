@@ -6,7 +6,15 @@ import { LoadingSkeleton } from '../LoadingSkeleton';
 import { buildDecisionContext, recommendOutfit } from '../../services/decisionService';
 import { formatUsd, strategyLabel } from '../../services/budgetFormat';
 import { extractErrorMessage } from '../../services/api';
-import type { CandidateMetrics, DecisionResponse, OutfitPiece } from '../../types/decision';
+import type {
+  CandidateMetrics,
+  DecisionResponse,
+  OutfitPiece,
+  RejectReasonCode,
+  ScoredCandidate,
+  SubScoreKey,
+  SuggestedAction,
+} from '../../types/decision';
 
 interface Props {
   requestId: string;
@@ -25,6 +33,49 @@ const CONFIDENCE_CLASS: Record<string, string> = {
   medium: 'badge badge-warn',
   low: 'badge badge-danger',
 };
+
+const REASON_LABEL: Record<RejectReasonCode, string> = {
+  STYLE_CLASH: 'Style clash',
+  MISSING_REQUIRED_CATEGORY: 'Missing category',
+  OVER_BUDGET: 'Over budget',
+  CONSTRAINT_VIOLATION: 'Requirement not met',
+  LOW_CONFIDENCE: 'Low confidence',
+  INCOMPLETE_OUTFIT: 'Incomplete outfit',
+};
+
+const ACTION_LABEL: Record<SuggestedAction, string> = {
+  retry_with_exclusions: 'Re-plan without these items',
+  increase_budget: 'Raise the budget',
+  relax_constraints: 'Relax a requirement',
+  accept_best_available: 'Accept the best available answer',
+  request_clarification: 'Ask what was meant',
+};
+
+const SUB_SCORE_FACTORS: { key: SubScoreKey; label: string }[] = [
+  { key: 'colour_harmony', label: 'Colour harmony' },
+  { key: 'formality_match', label: 'Formality match' },
+  { key: 'occasion_fit', label: 'Occasion fit' },
+  { key: 'budget_fit', label: 'Budget fit' },
+  { key: 'constraint_satisfaction', label: 'Requirements met' },
+];
+
+const CHECK_NOTE_LABEL: Record<string, string> = {
+  amount_not_in_data: 'Price not in the plan',
+  arithmetic_mismatch: 'Budget totals do not add up',
+  name_not_in_data: 'Item name not found',
+  colour_not_in_data: 'Colour not on a chosen item',
+  unverifiable_claim: 'Claim that cannot be checked',
+  store_not_in_data: 'Store not in the plan',
+  identifier_not_in_data: 'Reference not in the plan',
+};
+
+function checkNote(issue: string): string {
+  const cut = issue.indexOf(':');
+  if (cut < 0) return CHECK_NOTE_LABEL[issue.trim()] ?? 'Wording check note';
+  const code = issue.slice(0, cut).trim();
+  const value = issue.slice(cut + 1).trim();
+  return `${CHECK_NOTE_LABEL[code] ?? 'Wording check note'} — ${value}`;
+}
 
 /** The final chosen outfit: what to wear from the wardrobe, what to buy, why. */
 export function FinalOutfitPanel({ requestId, userId }: Props) {
@@ -87,6 +138,13 @@ export function FinalOutfitPanel({ requestId, userId }: Props) {
   const owned = decision.outfit.filter((p) => p.source === 'wardrobe');
   const toBuy = decision.outfit.filter((p) => p.source === 'purchase');
 
+  const optionNames = new Map<string, string>();
+  decision.alternatives.forEach((a) => optionNames.set(a.combination_id, a.name));
+  (decision.candidate_rejections ?? []).forEach((r) => optionNames.set(r.combination_id, r.name));
+  const rejections = decision.candidate_rejections ?? [];
+  const counterfactuals = decision.counterfactuals ?? [];
+  const verificationIssues = decision.verification_issues ?? [];
+
   return (
     <div className="stack">
       <div className="panel stack">
@@ -121,6 +179,16 @@ export function FinalOutfitPanel({ requestId, userId }: Props) {
             {decision.decision.confidence_score.toFixed(2)}
           </span>
           {decision.strategy && <span className="meta">{strategyLabel(decision.strategy)}</span>}
+          {decision.explanation_verified != null && (
+            <span
+              className={decision.explanation_verified ? 'badge badge-ok' : 'badge badge-warn'}
+            >
+              {decision.explanation_verified ? 'Wording checked' : 'Wording simplified'}
+            </span>
+          )}
+          {decision.retry_limit_reached && (
+            <span className="badge badge-warn">Best available answer</span>
+          )}
         </div>
 
         <p style={{ margin: 0 }}>{decision.explanation}</p>
@@ -158,12 +226,78 @@ export function FinalOutfitPanel({ requestId, userId }: Props) {
 
         {decision.metrics && <ScoreBreakdown metrics={decision.metrics} />}
 
+        {(decision.score_breakdown?.length ?? 0) > 0 && (
+          <FactorComparison
+            candidates={decision.score_breakdown ?? []}
+            nameFor={(id) =>
+              optionNames.get(id) ?? (id === decision.selected_combination_id ? 'Chosen outfit' : id)
+            }
+          />
+        )}
+
+        {verificationIssues.length > 0 && (
+          <details className="score-box">
+            <summary className="meta" style={{ cursor: 'pointer' }}>
+              Wording check notes
+            </summary>
+            <div style={{ marginTop: 8 }}>
+              {verificationIssues.map((issue, i) => (
+                <div key={`${issue}:${i}`} className="meta">
+                  {checkNote(issue)}
+                </div>
+              ))}
+            </div>
+          </details>
+        )}
+
+        {decision.decision_id && (
+          <div className="meta">Decision reference {decision.decision_id}</div>
+        )}
+
         {decision.unresolved_requirements.length > 0 && (
           <p className="meta" style={{ margin: 0 }}>
             Still missing: {decision.unresolved_requirements.join(', ')}.
           </p>
         )}
       </div>
+
+      {rejections.length > 0 && (
+        <div className="panel stack">
+          <h3 style={{ margin: 0 }}>Why the other options lost</h3>
+          {rejections.map((r) => (
+            <div key={r.combination_id}>
+              <div style={{ fontWeight: 600 }}>{r.name}</div>
+              <div className="chip-row">
+                {r.reason_codes.map((code) => (
+                  <span key={code} className="badge badge-muted">
+                    {REASON_LABEL[code] ?? code}
+                  </span>
+                ))}
+              </div>
+              {r.detail && <div className="meta">{r.detail}</div>}
+            </div>
+          ))}
+          {decision.suggested_action && (
+            <div className="meta">Next step: {ACTION_LABEL[decision.suggested_action]}</div>
+          )}
+          {decision.retry_limit_reason && (
+            <p className="meta" style={{ margin: 0 }}>
+              {decision.retry_limit_reason}
+            </p>
+          )}
+        </div>
+      )}
+
+      {counterfactuals.length > 0 && (
+        <div className="panel stack">
+          <h3 style={{ margin: 0 }}>What would change this answer</h3>
+          {counterfactuals.map((c, i) => (
+            <div key={`${c.kind}:${i}`} className="meta">
+              {c.sentence}
+            </div>
+          ))}
+        </div>
+      )}
 
       {decision.alternatives.length > 0 && (
         <div className="panel stack">
@@ -275,5 +409,46 @@ function ScoreBar({ value, compact = false }: { value: number; compact?: boolean
     >
       <span className="score-bar-fill" style={{ width: `${pct}%` }} />
     </span>
+  );
+}
+
+/** Weighted factor view: the chosen outfit and each runner-up on the same five axes. */
+function FactorComparison({
+  candidates,
+  nameFor,
+}: {
+  candidates: ScoredCandidate[];
+  nameFor: (combinationId: string) => string;
+}) {
+  return (
+    <details className="score-box" open={candidates.length > 1}>
+      <summary className="meta" style={{ cursor: 'pointer' }}>
+        How the options were compared
+      </summary>
+      <div style={{ marginTop: 8 }}>
+        {candidates.map((c) => (
+          <div key={c.combination_id} style={{ marginBottom: 10 }}>
+            <div className="row" style={{ justifyContent: 'space-between' }}>
+              <span style={{ fontWeight: 600 }}>
+                {c.rank}. {nameFor(c.combination_id)}
+              </span>
+              <span className="meta">
+                {c.overall_score.toFixed(2)}
+                {c.selected ? ' · chosen' : ''}
+              </span>
+            </div>
+            {SUB_SCORE_FACTORS.map((f) => (
+              <div key={f.key} className="row score-row">
+                <span className="meta">{f.label}</span>
+                <ScoreBar value={c.sub_scores[f.key]} compact />
+                <span className="meta">
+                  {c.sub_scores[f.key].toFixed(2)} · w {c.weights[f.key].toFixed(2)}
+                </span>
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+    </details>
   );
 }

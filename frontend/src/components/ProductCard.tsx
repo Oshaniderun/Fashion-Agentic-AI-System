@@ -44,7 +44,7 @@ export function ProductCard({ product, currency = 'USD' }: Props) {
             padding: 0,
             borderRadius: '50%',
             border: '1px solid currentColor',
-            background: open ? 'rgba(0,0,0,0.08)' : 'transparent',
+            background: open ? 'var(--glass-hover)' : 'transparent',
             color: 'inherit',
             font: 'italic 600 13px Georgia, serif',
             lineHeight: '20px',

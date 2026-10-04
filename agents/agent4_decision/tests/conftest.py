@@ -7,8 +7,13 @@ user JWT, exactly like production callers.
 """
 
 import os
+import tempfile
 
 os.environ.setdefault("LLM_PROVIDER", "mock")  # deterministic tests; no live Gemini
+# Keep the audit log out of the repo during tests (Feature 5).
+os.environ.setdefault(
+    "AUDIT_DB_PATH", os.path.join(tempfile.mkdtemp(prefix="agent4-audit-"), "audit.db")
+)
 
 import pytest
 from fastapi.testclient import TestClient
