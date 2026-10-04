@@ -902,13 +902,26 @@ td.num {
 
 .score-row .meta:first-child {
   flex: 1;
-  min-width: 0;
+  /* wide enough for "Requirements met" on one line; the bar gives up width
+     first because it shrinks down to its own min-width */
+  min-width: 88px;
 }
 
 .score-row .meta:last-child {
-  width: 34px;
+  /* sized for "Weight: 100%" — a fixed 34px column used to shatter the
+     score/weight readout into three broken lines */
+  min-width: 88px;
   text-align: right;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.score-values {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  line-height: 1.3;
+  margin-top: 0;
 }
 
 .score-row .score-bar {

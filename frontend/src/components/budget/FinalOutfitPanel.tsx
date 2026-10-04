@@ -4,7 +4,7 @@ import { Sparkles } from 'lucide-react';
 import { ErrorAlert } from '../ErrorAlert';
 import { LoadingSkeleton } from '../LoadingSkeleton';
 import { buildDecisionContext, recommendOutfit } from '../../services/decisionService';
-import { formatUsd, strategyLabel } from '../../services/budgetFormat';
+import { formatScorePercent, formatUsd, strategyLabel } from '../../services/budgetFormat';
 import { extractErrorMessage } from '../../services/api';
 import type {
   CandidateMetrics,
@@ -142,7 +142,11 @@ export function FinalOutfitPanel({ requestId, userId }: Props) {
   decision.alternatives.forEach((a) => optionNames.set(a.combination_id, a.name));
   (decision.candidate_rejections ?? []).forEach((r) => optionNames.set(r.combination_id, r.name));
   const rejections = decision.candidate_rejections ?? [];
-  const counterfactuals = decision.counterfactuals ?? [];
+  // Item swaps are phrased in catalogue ids and option keys a shopper cannot act
+  // on, so they stay in the API response and the audit log but off this screen.
+  const counterfactuals = (decision.counterfactuals ?? []).filter(
+    (c) => c.kind !== 'item_swap'
+  );
   const verificationIssues = decision.verification_issues ?? [];
 
   return (
@@ -176,7 +180,7 @@ export function FinalOutfitPanel({ requestId, userId }: Props) {
           <span className={status.badgeClass}>{status.label}</span>
           <span className={CONFIDENCE_CLASS[decision.decision.confidence_level] ?? 'badge badge-muted'}>
             {decision.decision.confidence_level} confidence ·{' '}
-            {decision.decision.confidence_score.toFixed(2)}
+            {formatScorePercent(decision.decision.confidence_score)}
           </span>
           {decision.strategy && <span className="meta">{strategyLabel(decision.strategy)}</span>}
           {decision.explanation_verified != null && (
@@ -310,7 +314,7 @@ export function FinalOutfitPanel({ requestId, userId }: Props) {
               </div>
               <div className="meta" style={{ textAlign: 'right' }}>
                 {formatUsd(a.total_cost_usd) ?? '—'}
-                <div>score {a.decision_score.toFixed(2)}</div>
+                <div>Score: {formatScorePercent(a.decision_score)}</div>
               </div>
             </div>
           ))}
@@ -382,7 +386,7 @@ function ScoreBreakdown({ metrics }: { metrics: CandidateMetrics }) {
       <div style={{ marginTop: 8 }}>
         <div className="row" style={{ justifyContent: 'space-between' }}>
           <span style={{ fontWeight: 600 }}>Overall match score</span>
-          <span style={{ fontWeight: 600 }}>{metrics.decision_score.toFixed(2)}</span>
+          <span style={{ fontWeight: 600 }}>{formatScorePercent(metrics.decision_score)}</span>
         </div>
         <ScoreBar value={metrics.decision_score} />
         {SCORE_FACTORS.map((f) => {
@@ -391,7 +395,7 @@ function ScoreBreakdown({ metrics }: { metrics: CandidateMetrics }) {
             <div key={f.key} className="row score-row">
               <span className="meta">{f.label}</span>
               <ScoreBar value={v} compact />
-              <span className="meta">{v.toFixed(2)}</span>
+              <span className="meta">{formatScorePercent(v)}</span>
             </div>
           );
         })}
@@ -433,7 +437,7 @@ function FactorComparison({
                 {c.rank}. {nameFor(c.combination_id)}
               </span>
               <span className="meta">
-                {c.overall_score.toFixed(2)}
+                {formatScorePercent(c.overall_score)}
                 {c.selected ? ' · chosen' : ''}
               </span>
             </div>
@@ -441,8 +445,9 @@ function FactorComparison({
               <div key={f.key} className="row score-row">
                 <span className="meta">{f.label}</span>
                 <ScoreBar value={c.sub_scores[f.key]} compact />
-                <span className="meta">
-                  {c.sub_scores[f.key].toFixed(2)} · w {c.weights[f.key].toFixed(2)}
+                <span className="meta score-values">
+                  <span>Score: {formatScorePercent(c.sub_scores[f.key])}</span>
+                  <span>Weight: {formatScorePercent(c.weights[f.key])}</span>
                 </span>
               </div>
             ))}

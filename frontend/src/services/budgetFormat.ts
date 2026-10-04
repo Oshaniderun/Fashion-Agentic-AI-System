@@ -59,6 +59,16 @@ export function storeUrl(productId: string, listed?: string | null): string | nu
   return /^[A-Z0-9]{10}$/.test(productId) ? `https://www.amazon.com/dp/${productId}` : null;
 }
 
+/**
+ * Decision scores and weights travel from Agent 4 as 0-1 decimals. This turns
+ * one into a percentage string for reading; it clamps exactly like the score
+ * bar does, so the number beside a bar always matches the bar's fill.
+ */
+export function formatScorePercent(value?: number | null): string {
+  if (value === null || value === undefined || Number.isNaN(value)) return '—';
+  return `${Math.round(Math.max(0, Math.min(1, value)) * 100)}%`;
+}
+
 export const STRATEGY_LABELS: Record<string, string> = {
   buy_nothing: 'Buy nothing',
   best_value: 'Best value',

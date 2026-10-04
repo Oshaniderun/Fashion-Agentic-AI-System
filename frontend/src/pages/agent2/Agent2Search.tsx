@@ -23,15 +23,68 @@ function newRequestId(): string {
   return `web-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
+interface SearchForm {
+  category: ProductCategory;
+  queryText: string;
+  colour: string;
+  style: string;
+  occasion: string;
+  maxPrice: string;
+  topK: string;
+}
+
+const EMPTY_FORM: SearchForm = {
+  category: 'dress',
+  queryText: '',
+  colour: '',
+  style: '',
+  occasion: '',
+  maxPrice: '50',
+  topK: '5',
+};
+
+const CACHE_KEY = 'agent2:last_search';
+
+// Opening a product detail page unmounts this page, so the last successful
+// search is kept for the tab session and read back when the user returns.
+function readCachedSearch(): { form: SearchForm; result: RetrievalResponse } | null {
+  try {
+    const raw = sessionStorage.getItem(CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { form?: Partial<SearchForm>; result?: RetrievalResponse };
+    if (!parsed.result) return null;
+    return { form: { ...EMPTY_FORM, ...parsed.form }, result: parsed.result };
+  } catch {
+    return null;
+  }
+}
+
+function cacheSearch(form: SearchForm, result: RetrievalResponse) {
+  try {
+    sessionStorage.setItem(CACHE_KEY, JSON.stringify({ form, result }));
+  } catch {
+    /* storage unavailable */
+  }
+}
+
+function clearCachedSearch() {
+  try {
+    sessionStorage.removeItem(CACHE_KEY);
+  } catch {
+    /* storage unavailable */
+  }
+}
+
 export function Agent2Search() {
-  const [category, setCategory] = useState<ProductCategory>('dress');
-  const [queryText, setQueryText] = useState('');
-  const [colour, setColour] = useState('');
-  const [style, setStyle] = useState('');
-  const [occasion, setOccasion] = useState('');
-  const [maxPrice, setMaxPrice] = useState('50');
-  const [topK, setTopK] = useState('5');
-  const [result, setResult] = useState<RetrievalResponse | null>(null);
+  const [cached] = useState(readCachedSearch);
+  const [category, setCategory] = useState(cached?.form.category ?? EMPTY_FORM.category);
+  const [queryText, setQueryText] = useState(cached?.form.queryText ?? '');
+  const [colour, setColour] = useState(cached?.form.colour ?? '');
+  const [style, setStyle] = useState(cached?.form.style ?? '');
+  const [occasion, setOccasion] = useState(cached?.form.occasion ?? '');
+  const [maxPrice, setMaxPrice] = useState(cached?.form.maxPrice ?? EMPTY_FORM.maxPrice);
+  const [topK, setTopK] = useState(cached?.form.topK ?? EMPTY_FORM.topK);
+  const [result, setResult] = useState<RetrievalResponse | null>(cached?.result ?? null);
   const [error, setError] = useState('');
   const [fieldError, setFieldError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -58,8 +111,13 @@ export function Agent2Search() {
         top_k: kNum,
       });
       setResult(res);
+      cacheSearch(
+        { category, queryText, colour, style, occasion, maxPrice, topK },
+        res
+      );
     } catch (err) {
       setResult(null);
+      clearCachedSearch();
       setError(
         axios.isAxiosError(err) && err.response ? describeHttpError(err.response.status) : extractErrorMessage(err)
       );
