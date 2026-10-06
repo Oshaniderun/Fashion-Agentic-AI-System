@@ -20,14 +20,50 @@ import type { HandoffRetrievalResponse } from '../types/agent2';
 import type { BudgetOptimizationResponse } from '../types/budget';
 import type { RetrievalRequest, RetrievalResponse } from '../types/agent2';
 
+function readSessionJson<T>(key: string): T | null {
+  try {
+    const raw = sessionStorage.getItem(key);
+    return raw ? (JSON.parse(raw) as T) : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeSession(key: string, value: string) {
+  try {
+    sessionStorage.setItem(key, value);
+  } catch {
+    /* storage unavailable */
+  }
+}
+
+function clearSession(key: string) {
+  try {
+    sessionStorage.removeItem(key);
+  } catch {
+    /* storage unavailable */
+  }
+}
+
 export function AnalysisResult() {
   const { requestId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [data, setData] = useState<FashionAnalysisResponse | null>(null);
+  const analysisKey = `analysis:${requestId}`;
+  const retrievalKey = `analysis:${requestId}:retrieval`;
+  const scrollKey = `analysis:${requestId}:scroll`;
+
+  // Opening a product's details navigates away, which unmounts this page. The
+  // analysis, its retrieved results and the reading position are restored for
+  // the trip back, so returning lands on the retrieved section instead of the top.
+  const [data, setData] = useState<FashionAnalysisResponse | null>(() =>
+    requestId ? readSessionJson<FashionAnalysisResponse>(analysisKey) : null
+  );
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [handoff, setHandoff] = useState<HandoffRetrievalResponse | null>(null);
+  const [loading, setLoading] = useState(() => !data);
+  const [handoff, setHandoff] = useState<HandoffRetrievalResponse | null>(() =>
+    requestId ? readSessionJson<HandoffRetrievalResponse>(retrievalKey) : null
+  );
   const [handoffLoading, setHandoffLoading] = useState(false);
   const [handoffError, setHandoffError] = useState('');
   const [planLoading, setPlanLoading] = useState(false);
@@ -37,23 +73,25 @@ export function AnalysisResult() {
 
   useEffect(() => {
     if (!requestId) return;
-    const cached = sessionStorage.getItem(`analysis:${requestId}`);
-    if (cached) {
-      try {
-        setData(JSON.parse(cached) as FashionAnalysisResponse);
-        setLoading(false);
-        return;
-      } catch {
-        /* fall through */
-      }
-    }
+    if (readSessionJson<FashionAnalysisResponse>(analysisKey)) return;
     getAnalysis(requestId)
       .then((res) => {
         setData(res);
-        sessionStorage.setItem(`analysis:${requestId}`, JSON.stringify(res));
+        writeSession(analysisKey, JSON.stringify(res));
       })
       .catch((err) => setError(extractErrorMessage(err)))
       .finally(() => setLoading(false));
+  }, [requestId]);
+
+  useEffect(() => {
+    if (!requestId) return;
+    const saved = Number(sessionStorage.getItem(scrollKey));
+    if (saved > 0) {
+      requestAnimationFrame(() => window.scrollTo(0, saved));
+    }
+    const rememberScroll = () => writeSession(scrollKey, String(window.scrollY));
+    window.addEventListener('scroll', rememberScroll, { passive: true });
+    return () => window.removeEventListener('scroll', rememberScroll);
   }, [requestId]);
 
   const runHandoff = async () => {
@@ -63,8 +101,10 @@ export function AnalysisResult() {
     try {
       const res = await searchFromAgent1Handoff(data.agent2_handoff);
       setHandoff(res);
+      writeSession(retrievalKey, JSON.stringify(res));
     } catch (err) {
       setHandoff(null);
+      clearSession(retrievalKey);
       const status = (err as { response?: { status?: number } }).response?.status;
       setHandoffError(status ? describeHttpError(status) : extractErrorMessage(err));
     } finally {
@@ -123,7 +163,7 @@ export function AnalysisResult() {
   // without requiring a click; the button stays as a manual re-run/retry.
   // Skipped when the request needs clarification or nothing was flagged missing.
   const needsClarification = !!data?.outfit_requirements.clarification_needed;
-  const autoRanFor = useRef<string | null>(null);
+  const autoRanFor = useRef<string | null>(handoff && requestId ? requestId : null);
   useEffect(() => {
     if (!data?.agent2_handoff || autoRanFor.current === requestId) return;
     if (data.outfit_requirements.clarification_needed) return;

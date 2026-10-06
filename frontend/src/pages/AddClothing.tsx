@@ -79,7 +79,7 @@ export function AddClothing() {
     <div className="page">
       <div className="page-header">
         <h1>Add Clothing</h1>
-        <p>Upload → crop garment → AI detects attributes → you confirm or edit → save.</p>
+        <p>Add a photo of the garment, crop it, then check the details before saving.</p>
       </div>
 
       <ErrorAlert message={error} />

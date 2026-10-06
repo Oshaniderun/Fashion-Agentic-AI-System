@@ -132,7 +132,7 @@ export function Agent2Search() {
     <div className="page">
       <div className="page-header">
         <h1>Product search</h1>
-        <p>Hybrid retrieval over the live catalogue (BM25 + semantic + hard filters + relaxation ladder).</p>
+        <p>Search fashion products by category, colour, style and price.</p>
       </div>
 
       <div className="panel">

@@ -66,7 +66,7 @@ export function Wardrobe() {
       <div className="page-header row" style={{ justifyContent: 'space-between' }}>
         <div>
           <h1>Wardrobe</h1>
-          <p>Browse owned clothing with AI attributes you can edit and confirm.</p>
+          <p>See the clothes you've added and update their details any time.</p>
         </div>
         <Link className="btn btn-primary" to="/wardrobe/add">
           Add Clothing
