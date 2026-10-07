@@ -67,10 +67,10 @@ export interface StatusMeta {
 export function statusMeta(status: RetrievalStatus, relaxed: string[] = []): StatusMeta {
   switch (status) {
     case 'ok':
-      return { label: 'ok', badgeClass: 'badge badge-ok', message: 'Matches found within all constraints.' };
+      return { label: 'Matches your filters', badgeClass: 'badge badge-ok', message: 'Matches found within all constraints.' };
     case 'relaxed':
       return {
-        label: 'relaxed',
+        label: 'Close match — filters widened',
         badgeClass: 'badge badge-warn',
         message: relaxed.length
           ? `Matches found after relaxing: ${relaxed.join(', ')}.`
@@ -78,12 +78,12 @@ export function statusMeta(status: RetrievalStatus, relaxed: string[] = []): Sta
       };
     case 'low_confidence':
       return {
-        label: 'low confidence',
+        label: 'Best available',
         badgeClass: 'badge badge-warn',
         message: 'Best-effort matches only — constraints were substantially loosened.',
       };
     case 'no_results':
-      return { label: 'no results', badgeClass: 'badge badge-danger', message: 'No products found, even after the full relaxation ladder.' };
+      return { label: 'Nothing found', badgeClass: 'badge badge-danger', message: 'No products found, even after the full relaxation ladder.' };
   }
 }
 

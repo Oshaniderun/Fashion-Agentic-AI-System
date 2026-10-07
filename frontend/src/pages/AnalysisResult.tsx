@@ -197,9 +197,7 @@ export function AnalysisResult() {
     <div className="page">
       <div className="page-header">
         <h1>Analysis Result</h1>
-        <p>
-          Request <code>{data.request_id}</code> — AI extraction vs owned wardrobe.
-        </p>
+        <p>Your request analysis</p>
       </div>
 
       <div className="stack">

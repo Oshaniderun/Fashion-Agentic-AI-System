@@ -42,7 +42,7 @@ export function Dashboard() {
     <div className="page">
       <div className="page-header">
         <h1>FASHORA</h1>
-        <p>Style & Wardrobe Intelligence — understand what you own, what you want, and what may be missing.</p>
+        <p>Style & Wardrobe Intelligence — understand what you own, what you want.</p>
       </div>
 
       <ErrorAlert message={error} />

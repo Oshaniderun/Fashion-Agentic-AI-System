@@ -29,7 +29,7 @@ export function FashionRequest() {
     <div className="page">
       <div className="page-header">
         <h1>Fashion Request</h1>
-        <p>Describe the outfit you need in natural language.</p>
+        <p>Describe the outfit you need.</p>
       </div>
       <ErrorAlert message={error} />
       <div className="panel" style={{ maxWidth: 820 }}>

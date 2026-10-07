@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { FashionRequestInput } from '../types';
 
 const SAMPLE_PROMPTS = [
-  'I need something elegant but not too formal for my cousin\'s engagement. I don\'t want bright colours.',
+  'Find me a long cocktail gown for a formal event',
   'I need something formal for an interview like a blouse and a bottom pant.',
 ];
 
