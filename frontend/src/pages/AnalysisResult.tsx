@@ -285,7 +285,7 @@ export function AnalysisResult() {
 
           {data.compatibility && (
             <div className="panel stack">
-              <h2>Compatibility (heuristic, not absolute truth)</h2>
+              <h2>How well your wardrobe fits this request</h2>
               <CompatibilityMeter label="Overall score" score={compatScore} />
               <CompatibilityMeter
                 label="Colour"
