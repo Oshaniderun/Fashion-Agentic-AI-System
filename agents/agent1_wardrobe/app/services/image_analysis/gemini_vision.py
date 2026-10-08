@@ -101,8 +101,12 @@ def _call_gemini_vision(image: Image.Image) -> Optional[Dict[str, Any]]:
     Returns parsed JSON dict, or None if all attempts fail.
     """
     import time
-    from google import genai  # type: ignore
-    from google.genai import types  # type: ignore
+    try:
+        from google import genai  # type: ignore
+        from google.genai import types  # type: ignore
+    except Exception as e:
+        logger.warning(f"Google GenAI SDK not available: {e}")
+        return None
 
     # Only confirmed-working free models (others return 404).
     # gemini-3.6-flash = primary; gemini-3.5-flash = secondary (may also be overloaded).

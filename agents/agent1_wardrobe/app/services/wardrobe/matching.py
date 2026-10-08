@@ -63,21 +63,47 @@ class WardrobeMatcher:
 
     def _score_item(self, item: WardrobeSummaryItem, requirements: UserRequirements) -> float:
         """Scores an individual item's alignment with user requirements."""
-        score = 0.5
+        score = 0.55
 
-        # Style match bonus
-        if any(s in item.style.lower() for s in requirements.style):
-            score += 0.3
+        item_colour = (item.colour or "").lower()
+        item_style = (item.style or "").lower()
+        item_cat = (item.category or "").lower()
 
-        # Color match bonus
-        if any(c in item.colour.lower() for c in requirements.colour_preferences):
-            score += 0.2
+        # 1. Global style or occasion formality alignment bonus
+        style_match = any(s.lower() in item_style for s in (requirements.style or []))
+        formality_match = False
+        if requirements.occasion:
+            occ = requirements.occasion.lower()
+            if occ in ["interview", "formal_event", "wedding", "work"]:
+                formality_match = item_style in ["formal", "smart_casual", "business"] or item.formality >= 0.60
+            elif occ in ["party", "dinner", "engagement"]:
+                formality_match = item_style in ["semi_formal", "smart_casual", "elegant"] or item.formality >= 0.50
+            elif occ in ["university", "casual"]:
+                formality_match = True
 
-        # Neutral color versatility bonus
-        if item.colour.lower() in ["black", "white", "grey", "beige", "navy"]:
-            score += 0.1
+        if style_match or formality_match:
+            score += 0.25
 
-        return score
+        # 2. Color match bonus (from global preferences OR item-specific identified items)
+        global_color_match = any(c.lower() in item_colour for c in (requirements.colour_preferences or []))
+        item_specific_color_match = False
+        if requirements.identified_items:
+            for ref in requirements.identified_items:
+                ref_cat = (ref.category or "").lower()
+                ref_col = (ref.colour or "").lower()
+                if ref_col and (ref_cat == item_cat or ref_cat in item_cat or item_cat in ref_cat):
+                    if ref_col in item_colour or item_colour in ref_col:
+                        item_specific_color_match = True
+                        break
+
+        if global_color_match or item_specific_color_match:
+            score += 0.20
+
+        # 3. Versatile neutral color bonus
+        if item_colour in ["black", "white", "grey", "beige", "navy", "cream", "brown"]:
+            score += 0.10
+
+        return min(0.95, round(score, 2))
 
 
 wardrobe_matcher = WardrobeMatcher()
